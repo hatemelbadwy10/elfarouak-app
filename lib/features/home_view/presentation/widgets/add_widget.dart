@@ -1,4 +1,8 @@
+import 'package:elfarouk_app/app_routing/route_names.dart';
+import 'package:elfarouk_app/core/services/navigation_service.dart';
 import 'package:flutter/material.dart';
+
+import '../../../../core/services/services_locator.dart';
 
 class AddWidget extends StatelessWidget {
   const AddWidget({super.key});
@@ -46,9 +50,8 @@ class AddWidget extends StatelessWidget {
           ), // تأثير الظل للقائمة
         ).then((value) {
           if (value == 1) {
-            // عملية "إضافة مستخدم"
+            getIt<NavigationService>().navigateTo(RouteNames.addUserView);
           } else if (value == 2) {
-            // عملية "إضافة تحويل"
           }
         });
       },

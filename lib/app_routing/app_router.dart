@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:elfarouk_app/app_routing/route_names.dart';
 import 'package:elfarouk_app/app_routing/routing_data.dart';
 import 'package:elfarouk_app/features/home_view/presentation/view/home_view.dart';
+import 'package:elfarouk_app/features/users/presentation/view/add_user_view.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../features/login_screen/presentation/view/login_screen.dart';
@@ -35,6 +36,11 @@ class AppRouter {
         case RouteNames.homeView:
         return _getPageRoute(
           const HomeView(),
+          settings,
+        );
+        case RouteNames.addUserView:
+        return _getPageRoute(
+          const AddUserView(),
           settings,
         );
 
