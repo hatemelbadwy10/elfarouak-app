@@ -1,4 +1,6 @@
+import 'package:elfarouk_app/user_info/user_info_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:elfarouk_app/app_routing/route_names.dart';
 import 'package:elfarouk_app/core/utils/app_theme.dart';
@@ -17,28 +19,26 @@ class ElfaroukApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Elfarouk App',
+    return BlocProvider<UserInfoBloc>(
+      create: (_) => UserInfoBloc()..add(GetUserDataEvent()),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Elfarouk App',
 
-      // Localization configuration
-      locale: const Locale('ar', 'EG'),
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('ar', 'EG')],
+        // Localization configuration
+        locale: const Locale('ar', 'EG'),
+        supportedLocales: const [Locale('ar', 'EG')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
 
-      // RTL configuration
-
-      // Theme configuration
-      theme: AppTheme.lightTheme,
-
-      // Routing configuration
-      onGenerateRoute: AppRouter.generateRoute,
-      initialRoute: RouteNames.splashScreen,
-      navigatorKey: getIt<NavigationService>().navigatorKey,
+        theme: AppTheme.lightTheme,
+        onGenerateRoute: AppRouter.generateRoute,
+        initialRoute: RouteNames.splashScreen,
+        navigatorKey: getIt<NavigationService>().navigatorKey,
+      ),
     );
   }
 }

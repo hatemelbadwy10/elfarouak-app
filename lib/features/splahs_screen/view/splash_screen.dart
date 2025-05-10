@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../app_routing/route_names.dart';
+import '../../../core/services/local_storage_services.dart';
 import '../../../core/services/navigation_service.dart';
 import '../../../core/services/services_locator.dart';
+
+import '../../../core/utils/storage_keys.dart';
 import '../widgets/circle_animation_widget.dart';
 import '../widgets/text_animation_widget.dart';
 
@@ -13,7 +16,8 @@ class SplashScreen extends StatefulWidget {
   SplashScreenState createState() => SplashScreenState();
 }
 
-class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   bool _isShrunk = false;
   bool _logoVisible = true;
   late AnimationController _verticalController;
@@ -67,6 +71,12 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
     _startAnimations();
   }
 
+  Future<bool> _checkIfLoggedIn() async {
+    return await getIt<SharedPrefServices>()
+            .getBoolean(StorageKeys.isLoggedIn) ??
+        false;
+  }
+
   void _startAnimations() {
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
@@ -77,14 +87,20 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
         setState(() {
           _logoVisible = true;
         });
+
         _verticalController.forward().then((_) {
           Future.delayed(const Duration(milliseconds: 100), () {
             _horizontalController.forward().then((_) {
               Future.delayed(const Duration(milliseconds: 100), () {
                 _textController.forward().then((_) {
-                  Future.delayed(const Duration(milliseconds: 300), () {
+                  Future.delayed(const Duration(milliseconds: 300), () async {
+                    final isLoggedIn = await _checkIfLoggedIn();
+                    final targetRoute = isLoggedIn
+                        ? RouteNames.homeView
+                        : RouteNames.loginScreen;
+
                     getIt<NavigationService>()
-                        .navigateToAndClearStack(RouteNames.loginScreen);
+                        .navigateToAndClearStack(targetRoute);
                   });
                 });
               });
@@ -115,6 +131,7 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // Uncomment and use your LogoAnimation widget if needed
                 // LogoAnimation(
                 //   logoVisible: _logoVisible,
                 //   verticalAnimation: _logoVerticalAnimation,

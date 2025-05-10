@@ -52,6 +52,7 @@ class AddWidget extends StatelessWidget {
           if (value == 1) {
             getIt<NavigationService>().navigateTo(RouteNames.addUserView);
           } else if (value == 2) {
+            getIt<NavigationService>().navigateTo(RouteNames.addTransferView);
           }
         });
       },

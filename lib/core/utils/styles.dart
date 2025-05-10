@@ -73,4 +73,49 @@ class Styles {
     fontWeight: FontWeight.bold,
     fontSize: 15,
   );
+
+  // الأنماط الإضافية
+  static const TextStyle titleLarge = TextStyle(
+    color: AppColors.textPrimary,
+    fontWeight: FontWeight.bold,
+    fontSize: 30,
+  );
+
+  static const TextStyle description = TextStyle(
+    color: AppColors.textSecondary,
+    fontWeight: FontWeight.w400,
+    fontSize: 16,
+  );
+
+  static const TextStyle linkText = TextStyle(
+    color: AppColors.primary,
+    fontWeight: FontWeight.w500,
+    fontSize: 16,
+    decoration: TextDecoration.underline, // للربط بين النص
+  );
+
+  static const TextStyle highlightedText = TextStyle(
+    color: AppColors.accent,
+    fontWeight: FontWeight.w700,
+    fontSize: 18,
+  );
+
+  static const TextStyle instructionText = TextStyle(
+    color: AppColors.textSecondary,
+    fontWeight: FontWeight.w300,
+    fontSize: 14,
+  );
+
+  // الأنماط الجديدة
+  static const TextStyle text14Medium = TextStyle(
+    color: AppColors.textPrimary,
+    fontWeight: FontWeight.w500,
+    fontSize: 14,
+  );
+
+  static const TextStyle text16SemiBold = TextStyle(
+    color: AppColors.textPrimary,
+    fontWeight: FontWeight.w600,
+    fontSize: 16,
+  );
 }

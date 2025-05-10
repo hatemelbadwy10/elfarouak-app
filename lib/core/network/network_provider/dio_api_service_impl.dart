@@ -73,7 +73,7 @@ class DioApiServiceImpl extends ApiService {
   Future<Either<ApiFaliureModel, ApiSuccessModel>> delete(String path,
       {Map<String, dynamic> body = const {}}) async {
     try {
-      final Response response = await _dio.post(path, data: body);
+      final Response response = await _dio.delete(path, data: body);
       log('response $response');
       return Right(ApiSuccessModel(
         statusCode: response.statusCode!,

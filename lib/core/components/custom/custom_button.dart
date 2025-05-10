@@ -7,15 +7,17 @@ class CustomButton extends StatelessWidget {
   final Color? color;
   final double? width;
   final double height;
+  final bool isLoading;  // New isLoading parameter
 
   const CustomButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.color,
     this.width,
     this.height = 50.0,
-  }) : super(key: key);
+    this.isLoading = false, // Default is false
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class CustomButton extends StatelessWidget {
       width: width ?? double.infinity,
       height: height,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed, // Disable button when loading
         style: ElevatedButton.styleFrom(
           backgroundColor: color ?? AppColors.primary,
           shape: RoundedRectangleBorder(
@@ -34,7 +36,11 @@ class CustomButton extends StatelessWidget {
             fontSize: 16,
           ),
         ),
-        child: Text(text),
+        child: isLoading
+            ? const CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        )
+            : Text(text), // Show progress indicator or text based on isLoading
       ),
     );
   }
