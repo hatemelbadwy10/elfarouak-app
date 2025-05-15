@@ -45,6 +45,13 @@ class DrawerWidget extends StatelessWidget {
             // ضع هنا ما تريد أن يحدث عند الضغط على العنصر
           },
         ),
+        ListTile(
+          title: const Text('الصناديق النقدية'),
+          onTap: () {
+            getIt<NavigationService>().navigateTo(RouteNames.cashBoxView);
+
+          },
+        ),
         BlocBuilder<HomeBloc, HomeState>(
           builder: (context, state) {
             return ListTile(

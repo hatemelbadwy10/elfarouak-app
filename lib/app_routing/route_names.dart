@@ -10,4 +10,7 @@ class RouteNames {
   static const String singleUsersView ='single_user_view';
   static const String customerView ='customer_view';
   static const String addCustomerView = 'add_customer_view';
+  static const String singleCustomerView = 'single_customer_view';
+  static const String cashBoxView="cash_box_view";
+  static const String addCashBoxView="add_cash_box_view";
 }
