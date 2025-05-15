@@ -11,12 +11,12 @@ abstract class ApiService {
 
   Future<Either<ApiFaliureModel, ApiSuccessModel>> post(
     String path, {
-    Map<String, dynamic> body = const {},
+    dynamic body = const {},
   });
 
   Future<Either<ApiFaliureModel, ApiSuccessModel>> put(
     String path, {
-    Map<String, dynamic> body = const {},
+   dynamic body = const {},
   });
 
   Future<Either<ApiFaliureModel, ApiSuccessModel>> delete(

@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 class ApiFaliureModel extends Equatable {
   final bool status;
   final String message;
-  final String data;
+  final dynamic data;
 
   const ApiFaliureModel({
     required this.status,
@@ -15,7 +15,7 @@ class ApiFaliureModel extends Equatable {
       ApiFaliureModel(
         status: json["status"] ??false,
         message: json["message"] ?? "",
-        data: json['data']??""
+        data: json['data']??{}
       );
 
   @override

@@ -53,21 +53,34 @@ class DioApiServiceImpl extends ApiService {
   }
 
   @override
-  Future<Either<ApiFaliureModel, ApiSuccessModel>> post(String path,
-      {Map<String, dynamic> body = const {}}) async {
+  Future<Either<ApiFaliureModel, ApiSuccessModel>> post(
+      String path, {
+        dynamic body = const {},
+      }) async {
     try {
-      final Response response = await _dio.post(path, data: body);
+      final Response response = await _dio.post(
+        path,
+        data: body,
+        options: Options(
+          contentType: body is FormData
+              ? 'multipart/form-data'
+              : 'application/json',
+        ),
+      );
+
       log('response $response');
+
       return Right(ApiSuccessModel(
-        statusCode: response.statusCode!,
-        message: response.statusMessage!,
-        data: response.data,
+      statusCode: response.statusCode!,
+      message: response.statusMessage ?? 'Success',
+      data: response.data,
       ));
     } on DioException catch (error) {
       log('error ${error.response?.data}');
       return Left(ApiFaliureModel.fromJson(error.response?.data ?? {}));
     }
   }
+
 
   @override
   Future<Either<ApiFaliureModel, ApiSuccessModel>> delete(String path,
@@ -88,7 +101,7 @@ class DioApiServiceImpl extends ApiService {
 
   @override
   Future<Either<ApiFaliureModel, ApiSuccessModel>> put(String path,
-      {Map<String, dynamic> body = const {}}) async {
+      {        dynamic body = const {},}) async {
     try {
       final Response response = await _dio.put(path, data: body);
       return Right(ApiSuccessModel(
