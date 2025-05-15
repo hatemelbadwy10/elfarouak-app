@@ -8,6 +8,8 @@ import 'package:elfarouk_app/features/home_view/presentation/widgets/drawer_widg
 import 'package:elfarouk_app/features/home_view/presentation/widgets/quick_action_widget.dart';
 import 'package:elfarouk_app/features/home_view/presentation/widgets/transfer_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../transfers/presentation/controller/transfer_bloc.dart';
 import '../widgets/balance_card_widget.dart';
 
 class HomeView extends StatelessWidget {
@@ -45,7 +47,8 @@ class HomeView extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14, // Slightly smaller font for emphasis
                     fontWeight: FontWeight.bold,
-                    color: Colors.greenAccent, // Green color for the exchange rate
+                    color:
+                        Colors.greenAccent, // Green color for the exchange rate
                   ),
                 ),
               ],
@@ -113,7 +116,8 @@ class HomeView extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: GestureDetector(
                 onTap: () {
-                  getIt<NavigationService>().navigateTo(RouteNames.transfersView);
+                  getIt<NavigationService>()
+                      .navigateTo(RouteNames.transfersView);
                 },
                 child: Text(
                   'عرض الكل',
@@ -129,20 +133,33 @@ class HomeView extends StatelessWidget {
             const SizedBox(height: 12),
 
             /// ✅ Expanded لازم يكون هنا علشان ListView
-            Expanded(
-              child: ListView.builder(
-                itemCount: 5,
-                itemBuilder: (context, index) {
-                  return const TransferCard(
-                    phone: "01207922143",
-                    from: 'أحمد',
-                    to: 'محمد',
-                    amount: '1500 جنيه',
-                    address: 'مصر',
-                    isSender: true,
+            ///
+            BlocBuilder<TransferBloc, TransferState>(
+              builder: (context, state) {
+                if (state is GetTransfersLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
                   );
-                },
-              ),
+                } else if (state is GetTransfersSuccess) {
+                  return Expanded(
+                    child: ListView.builder(
+                      itemCount: state.list.length,
+                      itemBuilder: (context, index) {
+                        return TransferCard(
+                          isSender: true,
+                          transfer: state.list[index],
+                        );
+                      },
+                    ),
+                  );
+                }
+                else if(state is GetTransfersFailure){
+                  return Text(state.errMessage);
+                }
+                else{
+                  return const SizedBox();
+                }
+              },
             ),
           ],
         ),
