@@ -2,12 +2,16 @@ import 'dart:io';
 
 import 'package:elfarouk_app/app_routing/route_names.dart';
 import 'package:elfarouk_app/app_routing/routing_data.dart';
+import 'package:elfarouk_app/features/cash_box_view/presentation/controller/cash_box_bloc.dart';
+import 'package:elfarouk_app/features/cash_box_view/presentation/view/add_cash_box_view.dart';
+import 'package:elfarouk_app/features/cash_box_view/presentation/view/cash_box_view.dart';
 import 'package:elfarouk_app/features/customers/presentation/controller/customers_bloc.dart';
 import 'package:elfarouk_app/features/customers/presentation/view/add_customer_view.dart';
 import 'package:elfarouk_app/features/customers/presentation/view/customers_view.dart';
 import 'package:elfarouk_app/features/home_view/presentation/controller/home_bloc.dart';
 import 'package:elfarouk_app/features/home_view/presentation/view/home_view.dart';
 import 'package:elfarouk_app/features/login_screen/presentation/controller/login_bloc.dart';
+import 'package:elfarouk_app/features/transfers/presentation/controller/transfer_bloc.dart';
 import 'package:elfarouk_app/features/transfers/presentation/view/add_transfer_view.dart';
 import 'package:elfarouk_app/features/transfers/presentation/view/single_transfer.dart';
 import 'package:elfarouk_app/features/transfers/presentation/view/transfers_view.dart';
@@ -19,6 +23,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/services/services_locator.dart';
+import '../features/customers/presentation/view/single_customer_view.dart';
 import '../features/login_screen/presentation/view/login_screen.dart';
 import '../features/splahs_screen/view/splash_screen.dart';
 
@@ -49,9 +54,17 @@ class AppRouter {
         );
       case RouteNames.homeView:
         return _getPageRoute(
-          BlocProvider<HomeBloc>(
-            create: (_) => HomeBloc(getIt()), // optional initial event
-            child: const HomeView(),
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<HomeBloc>(
+                create: (_) => HomeBloc(getIt()), // Initialize HomeBloc
+              ),
+              BlocProvider<TransferBloc>(
+                create: (_) => TransferBloc(getIt())
+                  ..add(GetTransfersEvent()), // Initialize TransferBloc
+              ),
+            ],
+            child: const HomeView(), // Replace this with your root widget
           ),
           settings,
         );
@@ -66,17 +79,22 @@ class AppRouter {
 
       case RouteNames.addTransferView:
         return _getPageRoute(
-          const AddTransferView(),
+          BlocProvider(
+              create: (_) => TransferBloc(getIt()),
+              child:  AddTransferView(argument: _getArguments(settings),)),
           settings,
         );
       case RouteNames.transfersView:
         return _getPageRoute(
-          const TransfersView(),
+          BlocProvider(
+              create: (context) =>
+                  TransferBloc(getIt())..add(GetTransfersEvent()),
+              child: const TransferScreen()),
           settings,
         );
       case RouteNames.singleTransferView:
         return _getPageRoute(
-          const SingleTransferView(),
+           SingleTransferScreen(argument: _getArguments(settings)!),
           settings,
         );
       case RouteNames.usersView:
@@ -106,6 +124,31 @@ class AppRouter {
             BlocProvider(
               create: (context) => CustomersBloc(getIt()),
               child: AddCustomerView(
+                argument: _getArguments(settings),
+              ),
+            ),
+            settings);
+      case RouteNames.singleCustomerView:
+        return _getPageRoute(
+            BlocProvider(
+              create: (context) => CustomersBloc(getIt()),
+              child: SingleCustomerScreen(
+                argument: _getArguments(settings)!,
+              ),
+            ),
+            settings);
+      case RouteNames.cashBoxView:
+        return _getPageRoute(
+            BlocProvider(
+                create: (context) =>
+                    CashBoxBloc(getIt())..add(GetCashBoxesEvent()),
+                child: const CashBoxView()),
+            settings);
+      case RouteNames.addCashBoxView:
+        return _getPageRoute(
+            BlocProvider(
+              create: (context) => CashBoxBloc(getIt()),
+              child: AddCashBoxView(
                 argument: _getArguments(settings),
               ),
             ),
