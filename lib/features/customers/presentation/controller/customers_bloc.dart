@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:meta/meta.dart';
@@ -10,6 +11,7 @@ import '../../domain/entity/customer_entity.dart';
 import '../../domain/repo/customers_repo.dart';
 
 part 'customers_event.dart';
+
 part 'customers_state.dart';
 
 class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
@@ -22,8 +24,8 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     on<DeleteCustomerEvent>(_deleteCustomer);
   }
 
-  Future<void> _getCustomers(
-      GetCustomersEvent event, Emitter<CustomersState> emit) async {
+  Future<void> _getCustomers(GetCustomersEvent event,
+      Emitter<CustomersState> emit) async {
     emit(CustomerLoading());
     final result = await _customersRepo.getCustomers();
     result.fold(
@@ -32,19 +34,20 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     );
   }
 
-  Future<void> _storeCustomer(
-      StoreCustomerEvent event, Emitter<CustomersState> emit) async {
+  Future<void> _storeCustomer(StoreCustomerEvent event,
+      Emitter<CustomersState> emit) async {
     emit(StoreCustomerLoading());
 
     final result = await _customersRepo.storeCustomer(StoreCustomerModel(
-      name: event.name,
-      phone: event.phone,
-      address: event.address,
-      gender: event.gender,
-      country: event.country,
-      balance: event.balance,
-      status: event.status,
-      note: event.note,
+        name: event.name,
+        phone: event.phone,
+        address: event.address,
+        gender: event.gender,
+        country: event.country,
+        balance: event.balance,
+        status: event.status,
+        note: event.note,
+        image: event.profilePic
     ));
 
     result.fold(
@@ -64,20 +67,21 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     );
   }
 
-  Future<void> _updateCustomer(
-      UpdateCustomerEvent event, Emitter<CustomersState> emit) async {
+  Future<void> _updateCustomer(UpdateCustomerEvent event,
+      Emitter<CustomersState> emit) async {
     emit(UpdateCustomerLoading());
 
     final result = await _customersRepo.updateCustomer(
       StoreCustomerModel(
-        name: event.name,
-        phone: event.phone,
-        address: event.address,
-        gender: event.gender,
-        country: event.country,
-        balance: event.balance,
-        status: event.status,
-        note: event.note,
+          name: event.name,
+          phone: event.phone,
+          address: event.address,
+          gender: event.gender,
+          country: event.country,
+          balance: event.balance,
+          status: event.status,
+          note: event.note,
+          image: event.profilePic
       ),
       event.id,
     );
@@ -98,15 +102,21 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     );
   }
 
-  Future<void> _deleteCustomer(
-      DeleteCustomerEvent event, Emitter<CustomersState> emit) async {
+  Future<void> _deleteCustomer(DeleteCustomerEvent event,
+      Emitter<CustomersState> emit) async {
     emit(DeleteCustomerLoading());
 
     final result = await _customersRepo.deleteCustomer(event.id);
 
     result.fold(
           (l) => emit(DeleteCustomerFailure(errMessage: l.message)),
-          (r) => emit(DeleteCustomerSuccess(message: r)),
+          (r) {
+        emit(DeleteCustomerSuccess(message: r));
+        getIt<NavigationService>().navigateToAndRemoveUntil(
+          RouteNames.customerView,
+          predicate: (route) => route.settings.name == RouteNames.homeView,
+        );
+      },
     );
   }
 }

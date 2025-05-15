@@ -23,6 +23,27 @@ class CustomersView extends StatelessWidget {
               itemCount: state.list.length,
               itemBuilder: (context, index) {
                 return CustomerCard(
+                  onDelete: (){
+                    context.read<CustomersBloc>().add(DeleteCustomerEvent(id: state.list[index].customerId));
+                  },
+                  onUpdate: (){
+                    final customer = state.list[index];
+                    getIt<NavigationService>().navigateTo(
+                      RouteNames.addCustomerView,
+                      arguments: {
+                        'id': customer.customerId,
+                        'name': customer.customerName,
+                        'phone': customer.customerPhone,
+                        'address': customer.customerAddress,
+                        'gender': customer.customerGender,
+                        'country': customer.customerCountry,
+                        'balance': customer.customerBalance,
+                        'status': 'active',
+                        'note': customer.customerNote,
+                        'profile_image': customer.customerProfilePicture,
+                      },
+                    );
+                  },
                   customer: state.list[index],
                 );
               },

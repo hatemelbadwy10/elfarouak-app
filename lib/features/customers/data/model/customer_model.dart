@@ -125,7 +125,7 @@ class Datum extends CustomerEntity {
       note: json["note"],
       balance: json["balance"],
       country: json["country"],
-      profilePicture: json["profile_picture"],
+      profilePicture: json["profile_picture"]??'',
       createdAt: DateTime.tryParse(json["created_at"] ?? ""),
       updatedAt: DateTime.tryParse(json["updated_at"] ?? ""),
       deletedAt: json["deleted_at"],

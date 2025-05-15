@@ -14,6 +14,7 @@ class StoreCustomerEvent extends CustomersEvent {
   final String balance;
   final String status;
   final String note;
+  final File profilePic;
 
   StoreCustomerEvent({
     required this.name,
@@ -24,6 +25,7 @@ class StoreCustomerEvent extends CustomersEvent {
     required this.balance,
     required this.status,
     required this.note,
+    required this.profilePic
   });
 }
 
@@ -37,6 +39,8 @@ class UpdateCustomerEvent extends CustomersEvent {
   final String balance;
   final String status;
   final String note;
+  final File? profilePic;
+
 
   UpdateCustomerEvent({
     required this.id,
@@ -48,6 +52,7 @@ class UpdateCustomerEvent extends CustomersEvent {
     required this.balance,
     required this.status,
     required this.note,
+     this.profilePic
   });
 }
 

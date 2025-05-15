@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
+
 class StoreCustomerModel {
   final String name;
   final String phone;
@@ -7,7 +11,7 @@ class StoreCustomerModel {
   final String balance;
   final String status;
   final String? note;
-  final String? image;
+  final File? image;
 
   StoreCustomerModel({
     required this.name,
@@ -31,8 +35,9 @@ class StoreCustomerModel {
       'balance': balance,
       'status': status,
       'note': note,
-      "profile_picture":image
-      // You'll need to handle image upload separately (e.g., multipart/form-data)
+      if (image != null)
+        'profile_pic':  MultipartFile.fromFile(image!.path,
+          filename: image!.path.split('/').last),      // You'll need to handle image upload separately (e.g., multipart/form-data)
     };
   }
 }

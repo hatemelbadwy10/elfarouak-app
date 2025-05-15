@@ -32,7 +32,7 @@ class CustomerEntity {
       customerNote: json['note'],
       customerBalance: json['balance'],
       customerCountry: json['country'],
-      customerProfilePicture: json['profile_picture'],
+      customerProfilePicture: json['profile_picture']??'',
     );
   }
 

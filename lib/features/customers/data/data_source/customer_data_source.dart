@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:dio/dio.dart';
 import 'package:elfarouk_app/core/network/api_constants.dart';
 import 'package:elfarouk_app/core/network/network_provider/api_services.dart';
 import 'package:elfarouk_app/features/customers/data/model/store_customer_model.dart';
@@ -26,6 +27,7 @@ class CustomerDataSourceImpl extends CustomerDataSource {
   Future<List<CustomerEntity>> getCustomers() async {
     final result = await _apiService.get(ApiConstants.customers);
     return result.fold((l) {
+      log('l ${l.data}');
       throw ServerException(errorModel: l);
     }, (r) {
       log('r.data ${r.data['data']['data']}');
@@ -38,7 +40,7 @@ class CustomerDataSourceImpl extends CustomerDataSource {
 
   @override
   Future<String> deleteCustomer(int id) async {
-    final url = '${ApiConstants.updateCustomer}/$id';
+    final url = '${ApiConstants.deleteCustomer}/$id';
     final response = await _apiService.delete(url);
     return response.fold((l) {
       throw ServerException(errorModel: l);
@@ -49,21 +51,43 @@ class CustomerDataSourceImpl extends CustomerDataSource {
 
   @override
   Future<String> storeCustomer(StoreCustomerModel storeCustomerModel) async {
-    final response = await _apiService.post(ApiConstants.storeCustomer,
-        body: storeCustomerModel.toJson());
-    return response.fold((l) {
-      throw ServerException(errorModel: l);
-    }, (r) {
+    final formData = FormData.fromMap(storeCustomerModel.toJson());
+
+    final response = await _apiService.post(
+      ApiConstants.storeCustomer,
+      body: formData ,
+    );
+
+    log("storeCustomerModel.toJson(): ${storeCustomerModel.toJson()}");
+    log('response: $response');
+
+    if (response.isRight()) {
+      final r = response.getOrElse(() => throw Exception('Unexpected right failure'));
+      log('right ${r.data}');
       return r.data['message'];
-    });
+    } else {
+      final l = response.swap().getOrElse(() => throw Exception('Unexpected left success'));
+      log('left status: ${l.status}');
+      log('left message: ${l.message}');
+      log('left data: ${l.data}');
+
+      if (l.status == true && (l.message?.contains('successfully') ?? false)) {
+        log('[!] Treating LEFT as success based on message!');
+        return l.message ?? 'Customer created';
+      }
+
+      throw ServerException(errorModel: l);
+    }
   }
+
 
   @override
   Future<String> updateCustomer(
       StoreCustomerModel storeCustomerModel, int id) async {
     final url = '${ApiConstants.updateCustomer}/$id';
+
     final response =
-        await _apiService.post(url, body: storeCustomerModel.toJson());
+        await _apiService.put(url, body: storeCustomerModel.toJson());
     return response.fold((l) {
       throw ServerException(errorModel: l);
     }, (r) {
