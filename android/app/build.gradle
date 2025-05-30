@@ -1,8 +1,10 @@
+
 plugins {
     id "com.android.application"
     id "kotlin-android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
+    id("com.google.gms.google-services")
 }
 
 def localProperties = new Properties()
@@ -35,7 +37,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.elfarouk_app"
+        applicationId "com.alfarouk_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk = flutter.minSdkVersion
@@ -56,3 +58,17 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Your existing dependencies...
+
+    // Use the constraints declaration to help with dependency resolution
+    constraints {
+        implementation('com.google.android.gms:play-services-measurement-impl:21.3.0') {
+            because('Compatibility with Kotlin version')
+        }
+        implementation('com.google.android.gms:play-services-measurement-api:21.3.0') {
+            because('Compatibility with Kotlin version')
+        }
+    }
+    }

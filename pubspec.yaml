@@ -45,13 +45,18 @@ dependencies:
   easy_localization: ^3.0.7+1
   bloc: ^9.0.0
   flutter_bloc: ^9.1.1
-
-
-
-
-
-
-
+  image_picker: ^1.1.2
+  http: ^1.4.0
+  url_launcher: ^6.3.1
+  flutter_typeahead: ^4.0.0
+  firebase_messaging: ^14.2.5
+  flutter_local_notifications: ^18.0.1
+  firebase_core: ^2.7.0
+  flutter_slidable: ^3.1.1
+  popup_quick_actions:
+    git:
+      url: https://github.com/hatemelbadwy10/quick_actions_popup.git
+      ref: auto-trigger-widget-
 
 
 
