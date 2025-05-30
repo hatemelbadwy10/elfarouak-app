@@ -22,4 +22,9 @@ class ApiConstants {
     return '$resource/search?query=$query';
   }
   static String storeTag = 'tag/store';
+  static const String getExpense ='expense/index';
+  static const String storeExpense ='expense/store';
+  static const String updateExpense ='expense/update/';
+  static const String deleteExpense ='expense/delete/';
+  static const String getDebtor = 'customer/debtor-customers';
 }

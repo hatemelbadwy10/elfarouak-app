@@ -1,13 +1,22 @@
+import 'dart:developer';
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:elfarouk_app/app_routing/route_names.dart';
 import 'package:elfarouk_app/app_routing/routing_data.dart';
+import 'package:elfarouk_app/features/cash_box_transfer_view/presentation/controller/cash_box_transfer_bloc.dart';
+import 'package:elfarouk_app/features/cash_box_transfer_view/presentation/controller/cash_box_transfer_event.dart';
+import 'package:elfarouk_app/features/cash_box_transfer_view/presentation/view/cash_box_transfer_view.dart';
 import 'package:elfarouk_app/features/cash_box_view/presentation/controller/cash_box_bloc.dart';
 import 'package:elfarouk_app/features/cash_box_view/presentation/view/add_cash_box_view.dart';
 import 'package:elfarouk_app/features/cash_box_view/presentation/view/cash_box_view.dart';
 import 'package:elfarouk_app/features/customers/presentation/controller/customers_bloc.dart';
 import 'package:elfarouk_app/features/customers/presentation/view/add_customer_view.dart';
 import 'package:elfarouk_app/features/customers/presentation/view/customers_view.dart';
+import 'package:elfarouk_app/features/expense/presentation/controller/expense_bloc.dart';
+import 'package:elfarouk_app/features/expense/presentation/view/add_expense_view.dart';
+import 'package:elfarouk_app/features/expense/presentation/view/expense_view.dart';
+import 'package:elfarouk_app/features/expense/presentation/view/single_expense_view.dart';
 import 'package:elfarouk_app/features/home_view/presentation/controller/home_bloc.dart';
 import 'package:elfarouk_app/features/home_view/presentation/view/home_view.dart';
 import 'package:elfarouk_app/features/login_screen/presentation/controller/login_bloc.dart';
@@ -24,6 +33,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/services/services_locator.dart';
 import '../features/customers/presentation/view/single_customer_view.dart';
+import '../features/debtor_customers/presentation/controller/debtor_customer_bloc.dart';
+import '../features/debtor_customers/presentation/view/debtor_customer_view.dart';
 import '../features/login_screen/presentation/view/login_screen.dart';
 import '../features/splahs_screen/view/splash_screen.dart';
 
@@ -53,6 +64,17 @@ class AppRouter {
           settings,
         );
       case RouteNames.homeView:
+        final now = DateTime.now();
+        final today =
+            DateTime(now.year, now.month, now.day); // today at 00:00:00
+        final yesterday = today.subtract(const Duration(days: 1)); // day before
+
+        final formatter = DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        final todayRange =
+            '${formatter.format(yesterday)} - ${formatter.format(today)}';
+
+        log('todayRange $todayRange');
+
         return _getPageRoute(
           MultiBlocProvider(
             providers: [
@@ -61,13 +83,17 @@ class AppRouter {
               ),
               BlocProvider<TransferBloc>(
                 create: (_) => TransferBloc(getIt())
-                  ..add(GetTransfersEvent()), // Initialize TransferBloc
+                  ..add(GetTransfersEvent(
+                      status: "pending",
+                      dateRange: todayRange,
+                    )), // Use today
               ),
             ],
-            child: const HomeView(), // Replace this with your root widget
+            child: const HomeView(),
           ),
           settings,
         );
+
       case RouteNames.addUserView:
         return _getPageRoute(
           BlocProvider(
@@ -81,7 +107,9 @@ class AppRouter {
         return _getPageRoute(
           BlocProvider(
               create: (_) => TransferBloc(getIt()),
-              child:  AddTransferView(argument: _getArguments(settings),)),
+              child: AddTransferView(
+                argument: _getArguments(settings),
+              )),
           settings,
         );
       case RouteNames.transfersView:
@@ -89,12 +117,14 @@ class AppRouter {
           BlocProvider(
               create: (context) =>
                   TransferBloc(getIt())..add(GetTransfersEvent()),
-              child: const TransferScreen()),
+              child: TransferScreen(
+                argument: _getArguments(settings) ?? {},
+              )),
           settings,
         );
       case RouteNames.singleTransferView:
         return _getPageRoute(
-           SingleTransferScreen(argument: _getArguments(settings)!),
+          SingleTransferScreen(argument: _getArguments(settings)!),
           settings,
         );
       case RouteNames.usersView:
@@ -151,6 +181,49 @@ class AppRouter {
               child: AddCashBoxView(
                 argument: _getArguments(settings),
               ),
+            ),
+            settings);
+      case RouteNames.expenseView:
+        return _getPageRoute(
+            BlocProvider(
+              create: (context) =>
+                  ExpenseBloc(getIt())..add(GetExpensesEvent()),
+              child: const ExpenseView(),
+            ),
+            settings);
+      case RouteNames.singleExpenseView:
+        return _getPageRoute(
+            SingleExpenseView(argument: _getArguments(settings)!), settings);
+      case RouteNames.addExpenseView:
+        return _getPageRoute(
+            MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (context) => ExpenseBloc(getIt()),
+                ),
+                BlocProvider(
+                  create: (context) => TransferBloc(getIt()),
+                ),
+              ],
+              child: AddExpenseView(
+                arguments: _getArguments(settings),
+              ),
+            ),
+            settings);
+      case RouteNames.debtorsView:
+        return _getPageRoute(
+            BlocProvider(
+              create: (context) =>
+                  DebtorCustomerBloc(getIt())..add(GetDebtorsEvent()),
+              child: const DebtorCustomersView(),
+            ),
+            settings);
+      case RouteNames.cashBoxTransferView:
+        return _getPageRoute(
+            BlocProvider(
+              create: (context) =>
+                  CashBoxTransferBloc(getIt())..add(GetCashBoxTransferEvent()),
+              child: const CashBoxTransferView(),
             ),
             settings);
       default:

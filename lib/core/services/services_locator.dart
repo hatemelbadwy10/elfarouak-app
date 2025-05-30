@@ -1,10 +1,20 @@
 
 
 import 'package:elfarouk_app/core/services/image_picker.dart';
+import 'package:elfarouk_app/features/cash_box_transfer_view/data/data_source/cash_box_transfer_data_source.dart';
+import 'package:elfarouk_app/features/cash_box_transfer_view/domain/repo/cash_box_transfer_repo.dart';
 import 'package:elfarouk_app/features/cash_box_view/data/repo_impl/cash_box_repo_impl.dart';
 import 'package:elfarouk_app/features/cash_box_view/presentation/controller/cash_box_bloc.dart';
 import 'package:elfarouk_app/features/customers/data/data_source/customer_data_source.dart';
 import 'package:elfarouk_app/features/customers/presentation/controller/customers_bloc.dart';
+import 'package:elfarouk_app/features/debtor_customers/data/data_source/debtor_customers_data_source.dart';
+import 'package:elfarouk_app/features/debtor_customers/data/repo/deptor_customers_repo_impl.dart';
+import 'package:elfarouk_app/features/debtor_customers/domain/repo/deptor_customers_repo.dart';
+import 'package:elfarouk_app/features/debtor_customers/presentation/controller/debtor_customer_bloc.dart';
+import 'package:elfarouk_app/features/expense/data/data_source/expense_data_source.dart';
+import 'package:elfarouk_app/features/expense/data/repo/expense_repo_impl.dart';
+import 'package:elfarouk_app/features/expense/domain/repo/expense_repo.dart';
+import 'package:elfarouk_app/features/expense/presentation/controller/expense_bloc.dart';
 import 'package:elfarouk_app/features/home_view/data/data_source/home_data_source.dart';
 import 'package:elfarouk_app/features/home_view/data/repo/home_repo_impl.dart';
 import 'package:elfarouk_app/features/home_view/domain/repo/home_repo.dart';
@@ -18,6 +28,8 @@ import 'package:elfarouk_app/features/users/domain/repo/user_repo.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/cash_box_transfer_view/data/repo/cash_box_transfer_repo_impl.dart';
+import '../../features/cash_box_transfer_view/presentation/controller/cash_box_transfer_bloc.dart';
 import '../../features/cash_box_view/data/data_source/cash_box_data_source.dart';
 import '../../features/cash_box_view/domain/repo/cash_box_repo.dart';
 import '../../features/customers/data/repo/customer_repo_impl.dart';
@@ -30,6 +42,7 @@ import '../../features/transfers/data/repo_impl/transfer_repo_impl.dart';
 import '../../features/users/presentation/controller/user_bloc.dart';
 import '../network/network_provider/api_services.dart';
 import '../network/network_provider/dio_api_service_impl.dart';
+import 'firebase_services.dart';
 import 'local_storage_services.dart';
 import 'navigation_service.dart';
 
@@ -42,6 +55,7 @@ setupSingeltonServices() async {
   getIt.registerLazySingleton<ApiService>(() => DioApiServiceImpl());
   getIt.registerLazySingleton(() => NavigationService());
   getIt.registerLazySingleton(() => SharedPrefServices());
+  getIt.registerLazySingleton(() => NotificationService());
  // await getIt<NotificationService>().initialize();
   await getIt<SharedPrefServices>().init();
   getIt.registerLazySingleton(()=>ImagePickerService());
@@ -51,6 +65,9 @@ _homeDI();
 _customersDI();
 _cashBoxDI();
 _transferDI();
+_expenseDI();
+_debtors();
+_cashBoxTransfer();
 }
 _getUsers(){
   getIt.registerLazySingleton<UsersDataSource>(
@@ -87,4 +104,19 @@ _transferDI(){
   getIt.registerLazySingleton<TransfersDataSource>(()=>TransfersDataSourceImpl(getIt()));
   getIt.registerLazySingleton<TransferRepo>(()=>TransferRepoImpl(getIt()));
   getIt.registerFactory(() => TransferBloc(getIt()));
+}
+_expenseDI(){
+  getIt.registerLazySingleton<ExpenseDataSource>(()=>ExpenseDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<ExpenseRepo>(()=>ExpenseRepoImpl(getIt()));
+  getIt.registerFactory(() => ExpenseBloc(getIt()));
+}
+_debtors(){
+  getIt.registerLazySingleton<DebtorCustomersDataSource>(()=>DebtorCustomersDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<DebtorCustomersRepo>(()=>DebtorCustomersRepoImpl(getIt()));
+  getIt.registerFactory(() => DebtorCustomerBloc(getIt()));
+}
+_cashBoxTransfer(){
+  getIt.registerLazySingleton<CashBoxTransferDataSource>(()=>CashBoxTransferDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<CashBoxTransferRepo>(()=>CashBoxTransferRepoImpl(getIt()));
+  getIt.registerFactory(() => CashBoxTransferBloc(getIt()));
 }

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -22,6 +24,7 @@ class CustomersView extends StatelessWidget {
             return ListView.builder(
               itemCount: state.list.length,
               itemBuilder: (context, index) {
+                log('id: state.list[index].customerId ${state.list[index].customerId}');
                 return CustomerCard(
                   onDelete: (){
                     context.read<CustomersBloc>().add(DeleteCustomerEvent(id: state.list[index].customerId));

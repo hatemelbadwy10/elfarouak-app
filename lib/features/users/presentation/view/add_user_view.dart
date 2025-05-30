@@ -32,6 +32,13 @@ class _AddUserViewState extends State<AddUserView> {
   final roles = ['مدير', 'مشرف', 'موظف'];
   final countries = ['مصر', 'ليبيا'];
 
+  // Map Arabic role names to backend role keys
+  final Map<String, String> roleMap = {
+    'مدير': 'admin',
+    'مشرف': 'user',
+    'موظف': 'employee',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -40,7 +47,13 @@ class _AddUserViewState extends State<AddUserView> {
       phoneController.text = widget.argument!['user_phone'];
       emailController.text = widget.argument!['user_Email'];
       accountController.text = widget.argument!['user_name'];
-      roleController.text = widget.argument!['user_role'];
+      // Convert backend role to Arabic role name for display
+      roleController.text = roleMap.entries
+          .firstWhere(
+            (entry) => entry.value == widget.argument!['user_role'],
+        orElse: () => const MapEntry('مدير', 'admin'),
+      )
+          .key;
       countryController.text =
           _getCountryName(widget.argument!['user_country']);
     } else {
@@ -52,11 +65,11 @@ class _AddUserViewState extends State<AddUserView> {
   String _getCountryCode(String countryName) {
     switch (countryName) {
       case 'مصر':
-        return 'eg';
+        return 'EG';
       case 'ليبيا':
-        return 'ly';
+        return 'LY';
       default:
-        return 'eg';
+        return 'EG';
     }
   }
 
@@ -126,7 +139,7 @@ class _AddUserViewState extends State<AddUserView> {
                         hintText: 'الاسم الكامل',
                         controller: nameController,
                         validator: (value) =>
-                            value!.isEmpty ? 'الاسم مطلوب' : null,
+                        value!.isEmpty ? 'الاسم مطلوب' : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -135,7 +148,7 @@ class _AddUserViewState extends State<AddUserView> {
                         controller: phoneController,
                         keyboardType: TextInputType.phone,
                         validator: (value) =>
-                            value!.isEmpty ? 'رقم الهاتف مطلوب' : null,
+                        value!.isEmpty ? 'رقم الهاتف مطلوب' : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -143,7 +156,7 @@ class _AddUserViewState extends State<AddUserView> {
                         hintText: 'اسم المستخدم',
                         controller: accountController,
                         validator: (value) =>
-                            value!.isEmpty ? 'اسم المستخدم مطلوب' : null,
+                        value!.isEmpty ? 'اسم المستخدم مطلوب' : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -162,7 +175,6 @@ class _AddUserViewState extends State<AddUserView> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Password only required in add mode
                       if (widget.argument == null) ...[
                         CustomTextField(
                           hintText: 'كلمة المرور',
@@ -170,8 +182,9 @@ class _AddUserViewState extends State<AddUserView> {
                           obscureText: true,
                           validator: (value) {
                             if (value!.isEmpty) return 'كلمة المرور مطلوبة';
-                            if (value.length < 6)
+                            if (value.length < 6) {
                               return 'يجب أن تكون كلمة المرور 6 أحرف على الأقل';
+                            }
                             return null;
                           },
                         ),
@@ -181,8 +194,9 @@ class _AddUserViewState extends State<AddUserView> {
                           controller: confirmPasswordController,
                           obscureText: true,
                           validator: (value) {
-                            if (value != passwordController.text)
+                            if (value != passwordController.text) {
                               return 'كلمات المرور غير متطابقة';
+                            }
                             return null;
                           },
                         ),
@@ -198,14 +212,16 @@ class _AddUserViewState extends State<AddUserView> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide:
-                                const BorderSide(color: AppColors.border),
+                            const BorderSide(color: AppColors.border),
                           ),
                         ),
                         items: roles
-                            .map((role) => DropdownMenuItem(
-                                value: role, child: Text(role)))
+                            .map((role) =>
+                            DropdownMenuItem(value: role, child: Text(role)))
                             .toList(),
-                        onChanged: (value) => roleController.text = value!,
+                        onChanged: (value) => setState(() {
+                          roleController.text = value!;
+                        }),
                       ),
                       const SizedBox(height: 16),
 
@@ -218,14 +234,16 @@ class _AddUserViewState extends State<AddUserView> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide:
-                                const BorderSide(color: AppColors.border),
+                            const BorderSide(color: AppColors.border),
                           ),
                         ),
                         items: countries
-                            .map((country) => DropdownMenuItem(
-                                value: country, child: Text(country)))
+                            .map((country) =>
+                            DropdownMenuItem(value: country, child: Text(country)))
                             .toList(),
-                        onChanged: (value) => countryController.text = value!,
+                        onChanged: (value) => setState(() {
+                          countryController.text = value!;
+                        }),
                       ),
                       const SizedBox(height: 30),
 
@@ -236,36 +254,36 @@ class _AddUserViewState extends State<AddUserView> {
                         onPressed: () {
                           if (formKey.currentState!.validate()) {
                             final countryCode =
-                                _getCountryCode(countryController.text);
+                            _getCountryCode(countryController.text);
 
                             if (widget.argument == null) {
                               context.read<UserBloc>().add(
-                                    StoreUserEvent(
-                                      name: nameController.text,
-                                      userName: accountController.text,
-                                      phone: phoneController.text,
-                                      email: emailController.text,
-                                      role: roleController.text,
-                                      countryCode: countryCode,
-                                      status: 'active',
-                                      password: passwordController.text,
-                                      passwordConfirmation:
-                                          confirmPasswordController.text,
-                                    ),
-                                  );
+                                StoreUserEvent(
+                                  name: nameController.text,
+                                  userName: accountController.text,
+                                  phone: phoneController.text,
+                                  email: emailController.text,
+                                  role: roleMap[roleController.text] ?? 'user',
+                                  countryCode: countryCode,
+                                  status: 'active',
+                                  password: passwordController.text,
+                                  passwordConfirmation:
+                                  confirmPasswordController.text,
+                                ),
+                              );
                             } else {
                               context.read<UserBloc>().add(
-                                    UpdateUserEvent(
-                                      id: widget.argument!['id'],
-                                      name: nameController.text,
-                                      userName: accountController.text,
-                                      phone: phoneController.text,
-                                      email: emailController.text,
-                                      role: roleController.text,
-                                      countryCode: countryCode,
-                                      status: '',
-                                    ),
-                                  );
+                                UpdateUserEvent(
+                                  id: widget.argument!['id'],
+                                  name: nameController.text,
+                                  userName: accountController.text,
+                                  phone: phoneController.text,
+                                  email: emailController.text,
+                                  role: roleMap[roleController.text] ?? 'user',
+                                  countryCode: countryCode,
+                                  status: '',
+                                ),
+                              );
                             }
                           }
                         },

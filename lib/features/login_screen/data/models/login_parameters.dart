@@ -15,7 +15,7 @@ class LoginParameteres {
     email = json['email'];
     password = json['password'];
     deviceId = json['device_id'];
-    deviceToken = json['device_token'];
+    deviceToken = json['fcm_token'];
   }
 
   Map<String, dynamic> toJson() {

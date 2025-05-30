@@ -24,6 +24,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     result.fold(
           (l) {
         ShowToastMessages.showMessage(l.message);
+        getIt<NavigationService>()
+            .navigateToAndClearStack(RouteNames.loginScreen);
         emit(LogoutFailure());
       },
           (r) {

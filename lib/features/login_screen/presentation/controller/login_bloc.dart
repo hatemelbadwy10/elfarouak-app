@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
+import 'package:elfarouk_app/core/services/firebase_services.dart';
 import 'package:elfarouk_app/features/login_screen/data/models/login_parameters.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meta/meta.dart';
@@ -25,8 +26,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
    on<UserLoginEvent>(_onUserLogin);
   }
    _onUserLogin (UserLoginEvent event,Emitter<LoginState>emit)async{
+    final fcmToken = await getIt<NotificationService>().getFcmToken();
+    log('fcm token ${fcmToken}');
     emit(LoginLoading());
-    final result =await _loginRepository.login(LoginParameteres(email: event.email,password: event.password));
+    final result =await _loginRepository.login(LoginParameteres(email: event.email,password: event.password,deviceToken: fcmToken));
     result.fold((l){
       emit(LoginFailure(errMessage: l.message));
 

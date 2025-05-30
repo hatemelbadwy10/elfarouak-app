@@ -29,7 +29,7 @@ class CustomerEntity {
       customerPhone: json['phone'],
       customerAddress: json['address'],
       customerGender: json['gender'],
-      customerNote: json['note'],
+      customerNote: json['note']??"لا يوجد ملاحظات",
       customerBalance: json['balance'],
       customerCountry: json['country'],
       customerProfilePicture: json['profile_picture']??'',

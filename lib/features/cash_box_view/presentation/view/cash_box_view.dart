@@ -1,3 +1,4 @@
+import 'package:elfarouk_app/user_info/user_info_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -51,14 +52,14 @@ class CashBoxView extends StatelessWidget {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: context.read<UserInfoBloc>().state.user?.role=="admin"?FloatingActionButton(
         onPressed: () {
           getIt<NavigationService>().navigateTo(RouteNames.addCashBoxView);
         },
         backgroundColor: Theme.of(context).primaryColor,
         tooltip: 'إضافة صندوق',
         child: const Icon(Icons.add, color: Colors.white),
-      ),
+      ):const SizedBox(),
     );
   }
 }
