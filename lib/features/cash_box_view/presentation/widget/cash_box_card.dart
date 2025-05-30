@@ -1,4 +1,6 @@
+import 'package:elfarouk_app/user_info/user_info_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entity/cash_box_entity.dart';
 
 class CashBoxCard extends StatelessWidget {
@@ -30,21 +32,22 @@ class CashBoxCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("الدولة: ${cashBox.country}"),
-            Text("الرصيد: EGP ${cashBox.balance.toStringAsFixed(2)}"),
+            Text("الرصيد: EGP ${cashBox.balance}"),
             Text("ملاحظات: ${cashBox.note.isNotEmpty ? cashBox.note : 'لا يوجد'}"),
           ],
         ),
-        trailing: PopupMenuButton<String>(
+        trailing:context.read<UserInfoBloc>().state.user?.role=='admin'? PopupMenuButton<String>(
           onSelected: (value) {
             if (value == 'update') onUpdate();
             if (value == 'delete') onDelete();
           },
           itemBuilder: (context) => const [
             PopupMenuItem(value: 'update', child: Text('تحديث')),
-            PopupMenuItem(value: 'delete', child: Text('حذف')),
+            // PopupMenuItem(value: 'delete', child: Text('حذف')),
           ],
           icon: const Icon(Icons.more_vert),
-        ),
+        // ignore: prefer_const_constructors
+        ):SizedBox(),
       ),
     );
   }

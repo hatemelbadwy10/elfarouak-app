@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/services/services_locator.dart';
 
 class AddWidget extends StatelessWidget {
-  const AddWidget({super.key});
+  const AddWidget({super.key, required this.rate});
+  final double rate;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +53,7 @@ class AddWidget extends StatelessWidget {
           if (value == 1) {
             getIt<NavigationService>().navigateTo(RouteNames.addUserView);
           } else if (value == 2) {
-            getIt<NavigationService>().navigateTo(RouteNames.addTransferView);
+            getIt<NavigationService>().navigateTo(RouteNames.addTransferView,arguments: {"exchange_fee":rate});
           }
         });
       },

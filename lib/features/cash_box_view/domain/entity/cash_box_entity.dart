@@ -20,7 +20,7 @@ class CashBoxEntity {
       id: json['id'],
       name: json['name'],
       country: json['country'],
-      balance: (json['balance'] ?? 0).toDouble(),
+      balance: (json['balance'] is double?  json['balance'] ?? 0: double.parse(json['balance'])),
       note: json['note'] ?? '',
       status: json['status'] ?? '',
     );
