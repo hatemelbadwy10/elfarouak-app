@@ -1,14 +1,14 @@
 import 'dart:developer';
-import 'dart:io';
 import 'package:elfarouk_app/core/services/navigation_service.dart';
 import 'package:elfarouk_app/core/services/services_locator.dart';
 import 'package:elfarouk_app/app_routing/route_names.dart';
+import '../../../../core/utils/app_colors.dart';
 import '../../domain/entity/transfer_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/components/custom/custom_button.dart';
-import '../../../customers/presentation/widget/image_picker_widget.dart';
 import '../controller/transfer_bloc.dart';
+import '../widgets/add_tag_widget.dart';
 import '../widgets/search_text_field.dart';
 
 class AddTransferView extends StatefulWidget {
@@ -24,43 +24,29 @@ class _AddTransferViewState extends State<AddTransferView> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _amountReceivedController =
-      TextEditingController();
-  final TextEditingController _currencyReceivedController =
-      TextEditingController();
-  final TextEditingController dayExchangeRateController =
-      TextEditingController();
-  final TextEditingController _exchangeFeeController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _clientNameController = TextEditingController();
   final TextEditingController _senderIdController = TextEditingController();
   final TextEditingController _branchController = TextEditingController();
   final TextEditingController _tagController = TextEditingController();
+  final TextEditingController _exchangeFee = TextEditingController();
 
-  File? _selectedImage;
-  String? _existingImageUrl;
-
-  // Currency dropdown with Arabic values
-  final Map<String, String> currencyMap = {
-    'EGP': 'الجنيه المصري',
-    'LYP': 'الدينار الليبي',
-  };
-  String _selectedCurrency = 'EGP';
-  String _currencyReceived = 'EGP';
-
-  // Transfer type via radio buttons
   String _transactionType = 'direct';
-
-  String _selectedStatus = 'pending';
   int? _senderId;
   int? _receiverId;
   int? _tagId;
-  int? _cashBoxId;
+  int? _cashBoxId = 1;
+
+  // Local state for tags to prevent dropdown from disappearing
+  List<dynamic> _tags = [];
+  bool _tagsLoading = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.argument != null) {
+    context.read<TransferBloc>().add(GetTagsEvent(type: "global_tags"));
+
+    if (widget.argument?['transfer'] != null) {
       // Check if argument is a TransferEntity
       if (widget.argument is Map<String, dynamic> &&
           widget.argument!.containsKey('transfer') &&
@@ -69,27 +55,23 @@ class _AddTransferViewState extends State<AddTransferView> {
 
         // Populate fields from TransferEntity
         _amountController.text = transfer.amountSent ?? '';
-        _amountReceivedController.text = transfer.amountReceived ?? '';
-        //_selectedCurrency = transfer.currencySent ?? 'EGP';
-        //_selectedCurrency = transfer.currencySent ?? 'EGP';
-        //_currencyReceivedController.text = transfer.currencyReceived?.toUpperCase() ?? '';
-        dayExchangeRateController.text =
-            transfer.dayExchangeRate?.toString() ?? '';
-        _exchangeFeeController.text =
-            transfer.exchangeRateWithFee?.toString() ?? '';
         _notesController.text = transfer.note ?? '';
         _transactionType = transfer.transferType ?? 'direct';
-        _selectedStatus = transfer.status ?? 'pending';
         _branchController.text = transfer.cashBoxName ?? '';
+        _exchangeFee.text =
+            transfer.exchangeRateWithFee ?? widget.argument?['exchange_fee'];
 
         // Set IDs from TransferEntity
         log('_sendeId $_senderId');
         log('_sendeId ${transfer.transferSenderId}');
-        _senderId = int.parse(transfer.transferSenderId);
+
+        _senderId = transfer.transferSenderId is int
+            ? transfer.transferSenderId
+            : int.parse(transfer.transferSenderId ?? "1");
         log('_sendeId $_senderId');
         log('_sendeId ${transfer.transferSenderId}');
         _receiverId = int.tryParse(transfer.receiverId);
-        _tagId = int.tryParse(transfer.tagId);
+        _tagId = int.tryParse(transfer.tagId ?? "1");
         _cashBoxId = int.parse(transfer.cashBoxId);
 
         // Set display names for sender and receiver
@@ -98,26 +80,13 @@ class _AddTransferViewState extends State<AddTransferView> {
         _tagController.text = transfer.transferTag ?? '';
 
         // Set existing image URL if available
-        _existingImageUrl = transfer.receiptImage;
       }
       // Regular map argument - use same logic as before
       else {
         _amountController.text =
             widget.argument!['amount_sent']?.toString() ?? '';
-        _amountReceivedController.text =
-            widget.argument!['amount_received']?.toString() ?? '';
-        _selectedCurrency = widget.argument!['currency_sent'] ?? 'EGP';
-        _currencyReceived =
-            widget.argument!['currency_received'].toString().toUpperCase();
-        _currencyReceivedController.text =
-            widget.argument!['currency_received'] ?? '';
-        dayExchangeRateController.text =
-            widget.argument!['day_exchange_rate']?.toString() ?? '';
-        _exchangeFeeController.text =
-            widget.argument!['exchange_rate_with_fee']?.toString() ?? '';
         _notesController.text = widget.argument!['note'] ?? '';
         _transactionType = widget.argument!['transfer_type'] ?? 'direct';
-        _selectedStatus = widget.argument!['status'] ?? 'pending';
         _branchController.text = widget.argument!['cash_box_name'] ?? '';
 
         // Set IDs from existing data
@@ -132,64 +101,119 @@ class _AddTransferViewState extends State<AddTransferView> {
         _tagController.text = widget.argument!['tag_name'] ?? '';
 
         // Set existing image URL if available
-        _existingImageUrl = widget.argument!['receipt_image'];
       }
     } else {
       // Default values for new transfer
-      _selectedCurrency = 'EGP';
-      _currencyReceived = 'EGP';
       _transactionType = 'direct';
-      _selectedStatus = 'pending';
     }
+  }
+
+  void _updateTagsList(List<dynamic> tags) {
+    setState(() {
+      _tags = tags;
+      _tagsLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.argument == null ? 'إضافة تحويل' : 'تعديل التحويل'),
+        backgroundColor: AppColors.primary,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.argument?['transfer'] == null
+                  ? 'إضافة تحويل'
+                  : 'تعديل التحويل',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                const Text(
+                  'سعر الدينار الليبي: ',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ),
+                Text(
+                  widget.argument?['exchange_fee'] != null
+                      ? '${widget.argument!['exchange_fee']} جنيه مصري'
+                      : 'غير متوفر',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.greenAccent,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-      body: BlocListener<TransferBloc, TransferState>(
-        listener: (context, state) {
-          if (state is StoreTransferSuccess || state is UpdateTransferSuccess) {
-            final message = state is StoreTransferSuccess
-                ? state.message
-                : (state as UpdateTransferSuccess).message;
+      body: MultiBlocListener(
+        listeners: [
+          // Handle transfer operations
+          BlocListener<TransferBloc, TransferState>(
+            listener: (context, state) {
+              if (state is StoreTransferSuccess ||
+                  state is UpdateTransferSuccess) {
+                final message = state is StoreTransferSuccess
+                    ? state.message
+                    : (state as UpdateTransferSuccess).message;
 
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(message),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            getIt<NavigationService>()
-                .navigateToAndReplace(RouteNames.transfersView);
-          }
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    SnackBar(
+                      content: Text(message),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                getIt<NavigationService>()
+                    .navigateToAndReplace(RouteNames.homeView);
+              }
 
-          if (state is StoreTransferFailure || state is UpdateTransferFailure) {
-            final errMessage = state is StoreTransferFailure
-                ? state.errMessage
-                : (state as UpdateTransferFailure).errMessage;
+              if (state is StoreTransferFailure ||
+                  state is UpdateTransferFailure) {
+                final errMessage = state is StoreTransferFailure
+                    ? state.errMessage
+                    : (state as UpdateTransferFailure).errMessage;
 
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(errMessage),
-                  backgroundColor: Colors.red,
-                ),
-              );
-          }
-        },
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    SnackBar(
+                      content: Text(errMessage),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+              }
+            },
+          ),
+          // Handle tags loading separately
+          BlocListener<TransferBloc, TransferState>(
+            listener: (context, state) {
+              if (state is GetTagsSuccess) {
+                log("state $state");
+                _updateTagsList(state.list);
+              } else if (state is GetTagsLoading) {
+                setState(() {
+                  _tagsLoading = true;
+                });
+              }
+            },
+          ),
+        ],
         child: BlocBuilder<TransferBloc, TransferState>(
           builder: (context, state) {
-            if (state is StoreTransferLoading ||
-                state is UpdateTransferLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
@@ -209,7 +233,7 @@ class _AddTransferViewState extends State<AddTransferView> {
                     ),
                     const SizedBox(height: 10),
                     SearchTextField(
-                      label: 'اسم العميل',
+                      label: 'اسم المستفيد',
                       textEditingController: _clientNameController,
                       listType: "customer",
                       onSuggestionSelected: (suggestion) {
@@ -220,87 +244,75 @@ class _AddTransferViewState extends State<AddTransferView> {
                       },
                     ),
                     const SizedBox(height: 10),
+                    DropdownButtonFormField<int>(
+                      decoration: const InputDecoration(labelText: 'الفرع'),
+                      value: _cashBoxId,
+                      items: const [
+                        DropdownMenuItem(value: 1, child: Text('فرع ليبيا')),
+                        DropdownMenuItem(value: 2, child: Text('فرع مصر')),
+                      ],
+                      onChanged: (value) {
+                        setState(() => _cashBoxId = value);
+                      },
+                      validator: (value) =>
+                          value == null ? 'الفرع مطلوب' : null,
+                    ),
+                    const SizedBox(height: 10),
                     TextFormField(
-                      controller: _amountController,
+                      controller: _exchangeFee,
                       keyboardType: TextInputType.number,
-                      decoration:
-                          const InputDecoration(labelText: 'المبلغ المرسل'),
+                      decoration: const InputDecoration(labelText: 'سعر الصرف'),
                       validator: (value) => value!.isEmpty ? 'مطلوب' : null,
                     ),
                     const SizedBox(height: 10),
-                    TextFormField(
-                      controller: _amountReceivedController,
-                      keyboardType: TextInputType.number,
-                      decoration:
-                          const InputDecoration(labelText: 'المبلغ المستلم'),
-                    ),
-                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _amountController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                                labelText: 'المبلغ المرسل'),
+                            validator: (value) =>
+                                value!.isEmpty ? 'مطلوب' : null,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.sync_alt),
+                          onPressed: () {
+                            log('amountText');
+                            final amountText = _amountController.text;
+                            final exchangeFeetText = _exchangeFee.text;
 
-                    // Currency dropdown
-                    DropdownButtonFormField<String>(
-                      value: _selectedCurrency,
-                      decoration:
-                          const InputDecoration(labelText: 'عملة التحويل'),
-                      items: currencyMap.entries.map((entry) {
-                        return DropdownMenuItem(
-                          value: entry.key,
-                          child: Text(entry.value),
-                        );
-                      }).toList(),
-                      onChanged: (value) =>
-                          setState(() => _selectedCurrency = value!),
-                    ),
-
-                    const SizedBox(height: 10),
-                    DropdownButtonFormField<String>(
-                      value: _currencyReceived,
-                      decoration:
-                          const InputDecoration(labelText: 'عملة الاستلام'),
-                      items: currencyMap.entries.map((entry) {
-                        return DropdownMenuItem(
-                          value: entry.key,
-                          child: Text(entry.value),
-                        );
-                      }).toList(),
-                      onChanged: (value) => setState(
-                          () => _currencyReceivedController.text = value!),
-                    ),
-                    const SizedBox(height: 10),
-                    TextFormField(
-                      controller: dayExchangeRateController,
-                      keyboardType: TextInputType.number,
-                      decoration:
-                          const InputDecoration(labelText: 'سعر الصرف اليومي'),
-                    ),
-                    const SizedBox(height: 10),
-
-                    TextFormField(
-                      controller: _exchangeFeeController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'العمولة'),
-                    ),
-
-                    const SizedBox(height: 10),
-                    TextFormField(
-                      controller: _branchController,
-                      decoration: const InputDecoration(labelText: 'الخزنة'),
-                    ),
-                    const SizedBox(height: 10),
-                    DropdownButtonFormField<String>(
-                      value: _selectedStatus,
-                      decoration: const InputDecoration(labelText: 'الحالة'),
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'pending', child: Text('قيد الانتظار')),
-                        DropdownMenuItem(value: 'done', child: Text('تم')),
+                            if (amountText.isNotEmpty) {
+                              context.read<TransferBloc>().add(ConvertCurrency(
+                                    amount: double.tryParse(amountText) ?? 0,
+                                    exchangeFee:
+                                        double.tryParse(exchangeFeetText) ??
+                                            widget.argument?['exchange_fee'],
+                                    branchId: _cashBoxId ?? 1,
+                                  ));
+                            }
+                          },
+                        ),
+                        // 👇 Only this part uses BlocBuilder for currency exchange
+                        BlocBuilder<TransferBloc, TransferState>(
+                          buildWhen: (previous, current) =>
+                              current is CurrencyExchanged,
+                          builder: (context, state) {
+                            if (state is CurrencyExchanged) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: Text(state.currencyExchange.toString()),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                       ],
-                      onChanged: (value) =>
-                          setState(() => _selectedStatus = value!),
                     ),
-
                     const SizedBox(height: 10),
                     // Transfer Type Radio Buttons
-                    const Text('نوع التحويل', style: TextStyle(fontSize: 16)),
                     Row(
                       children: [
                         Expanded(
@@ -317,7 +329,11 @@ class _AddTransferViewState extends State<AddTransferView> {
                         ),
                         Expanded(
                           child: RadioListTile(
-                            title: const Text('غير مباشر'),
+                            title: const Text(
+                              'من الحساب',
+                              style: TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.bold),
+                            ),
                             value: 'indirect',
                             groupValue: _transactionType,
                             onChanged: (value) {
@@ -329,113 +345,52 @@ class _AddTransferViewState extends State<AddTransferView> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 10),
+                    // Tags dropdown with local state management
                     Row(
                       children: [
                         Expanded(
-                          child: SearchTextField(
-                            label: 'تاج (ملاحظات مختصرة)',
-                            textEditingController: _tagController,
-                            listType: 'tag',
-                            onSuggestionSelected: (suggestion) {
-                              setState(() {
-                                _tagId = suggestion.id;
-                                _tagController.text = suggestion.label;
-                              });
-                            },
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                final tagNameController =
-                                    TextEditingController();
-
-                                return BlocProvider(
-                                  create: (context) => TransferBloc(getIt()),
-                                  child:
-                                      BlocConsumer<TransferBloc, TransferState>(
-                                    listener: (context, state) {
-                                      if (state is StoreTagSuccess) {
-                                        Navigator.pop(context);
-                                        setState(() {
-                                          _tagId = int.tryParse(state.tagId);
-                                          _tagController.text =
-                                              tagNameController.text;
-                                        });
-                                      } else if (state is StoreTagFailure) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                              content: Text(state.errMessage)),
-                                        );
-                                      }
-                                    },
-                                    builder: (context, state) {
-                                      return AlertDialog(
-                                        title: const Text('إضافة تاج'),
-                                        content: TextField(
-                                          controller: tagNameController,
-                                          decoration: const InputDecoration(
-                                              labelText: 'اسم التاج'),
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context),
-                                            child: const Text('إلغاء'),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              final tagName =
-                                                  tagNameController.text.trim();
-                                              if (tagName.isNotEmpty) {
-                                                context
-                                                    .read<TransferBloc>()
-                                                    .add(StoreTagEvent(
-                                                        tag: tagName));
-                                                Navigator.pop(context);
-                                              }
-                                            },
-                                            child: state is StoreTagLoading
-                                                ? const SizedBox(
-                                                    width: 20,
-                                                    height: 20,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                            strokeWidth: 2),
-                                                  )
-                                                : const Text('إضافة'),
-                                          ),
-                                        ],
-                                      );
-                                    },
+                          child: _tagsLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : DropdownButtonFormField(
+                                  decoration: const InputDecoration(
+                                    labelText: 'تاج (ملاحظات مختصرة)',
+                                    border: OutlineInputBorder(),
                                   ),
-                                );
-                              },
-                            );
+                                  value: _tagId,
+                                  items: _tags.map((tag) {
+                                    return DropdownMenuItem(
+                                      value: tag.id,
+                                      child: Text(tag.label),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    final selectedTag = _tags
+                                        .firstWhere((tag) => tag.id == value);
+                                    setState(() {
+                                      _tagId = selectedTag.id;
+                                      _tagController.text = selectedTag.label;
+                                    });
+                                  },
+                                ),
+                        ),
+                        AddTagButton(
+                          contextBloc: context,
+                          type: "global_tags",
+                          onTagCreated: (newTagId, label) {
+                            setState(() {
+                              _tagId = newTagId;
+                              _tagController.text = label;
+
+                              // Optional: fetch updated tags list again
+                              context
+                                  .read<TransferBloc>()
+                                  .add(GetTagsEvent(type: "global_tags"));
+                            });
                           },
-                          icon: const Icon(Icons.add),
-                        )
+                        ),
                       ],
                     ),
-
-                    const SizedBox(height: 10),
-                    // Show image picker only if it's the "Add" view or if it's the "Update" view without an existing image
-                    widget.argument == null || _existingImageUrl == null
-                        ? PickSingleImageWidget(
-                            image: _selectedImage,
-                            onImagePicked: (File value) {
-                              setState(() {
-                                _selectedImage = value;
-                                _existingImageUrl = null;
-                              });
-                            },
-                          )
-                        : Container(),
                     const SizedBox(height: 10),
                     TextFormField(
                       controller: _notesController,
@@ -444,7 +399,9 @@ class _AddTransferViewState extends State<AddTransferView> {
                     ),
                     const SizedBox(height: 20),
                     CustomButton(
-                      text: widget.argument == null
+                      isLoading: state is StoreTransferLoading ||
+                          state is UpdateTransferLoading,
+                      text: widget.argument?['transfer'] == null
                           ? "حفظ التحويل"
                           : "تحديث التحويل",
                       onPressed: () {
@@ -457,37 +414,18 @@ class _AddTransferViewState extends State<AddTransferView> {
                             return;
                           }
 
-                          if (widget.argument == null) {
-                            // Create new transfer
-                            if (_selectedImage == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('يرجى اختيار صورة الإيصال')),
-                              );
-                              return;
-                            }
-
+                          if (widget.argument?['transfer'] == null) {
+                            log('message${widget.argument?['exchange_fee']}');
                             context.read<TransferBloc>().add(
                                   StoreTransferEvent(
-                                    senderId: _senderId!,
-                                    receiverId: _receiverId!,
-                                    amountSent: _amountController.text,
-                                    currencySent: _selectedCurrency,
-                                    amountReceived:
-                                        _amountReceivedController.text,
-                                    currencyReceived:
-                                        _currencyReceivedController.text,
-                                    dayExchangeRate:
-                                        dayExchangeRateController.text,
-                                    exchangeRateWithFee:
-                                        _exchangeFeeController.text,
-                                    transferType: _transactionType,
-                                    cashBoxId: _cashBoxId ?? 1,
-                                    status: _selectedStatus,
-                                    note: _notesController.text,
-                                    tagId: _tagId ?? 0,
-                                    image: _selectedImage,
-                                  ),
+                                      senderId: _senderId!,
+                                      receiverId: _receiverId!,
+                                      amountSent: _amountController.text,
+                                      transferType: _transactionType,
+                                      cashBoxId: _cashBoxId ?? 1,
+                                      note: _notesController.text,
+                                      tagId: _tagId ?? 1,
+                                      exchangeRateWithFee: _exchangeFee.text),
                                 );
                           } else {
                             // Update existing transfer
@@ -497,21 +435,11 @@ class _AddTransferViewState extends State<AddTransferView> {
                                     senderId: _senderId!,
                                     receiverId: _receiverId!,
                                     amountSent: _amountController.text,
-                                    currencySent: _selectedCurrency,
-                                    amountReceived:
-                                        _amountReceivedController.text,
-                                    currencyReceived:
-                                        _currencyReceivedController.text,
-                                    dayExchangeRate:
-                                        dayExchangeRateController.text,
-                                    exchangeRateWithFee:
-                                        _exchangeFeeController.text,
                                     transferType: _transactionType,
                                     cashBoxId: _cashBoxId ?? 1,
-                                    status: _selectedStatus,
                                     note: _notesController.text,
-                                    tagId: _tagId ?? 0,
-                                    //receiptImage: _selectedImage,
+                                    exchangeRateWithFee: _exchangeFee.text,
+                                    tagId: _tagId ?? 1,
                                   ),
                                 );
                           }

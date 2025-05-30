@@ -3,87 +3,169 @@ part of 'transfer_bloc.dart';
 @immutable
 sealed class TransferState {}
 
-final class TransferInitial extends TransferState {}
+class TransferInitial extends TransferState {}
 
-final class GetTransfersLoading extends TransferState {}
+class GetTransfersLoading extends TransferState {}
 
-final class GetTransfersSuccess extends TransferState {
+class GetTransfersSuccess extends TransferState {
   final List<TransferEntity> list;
+  final double rate;
+  final bool hasReachedEnd;
+  final int currentPage;
+  final bool isLoadingMore;
+  final dynamic totalTransfers;
+  final dynamic totalAmountReceived;
+  final dynamic totalBalanceEgp;
+  final String? search;
+  final String? status;
+  final String? transferType;
+  final String? tagId;
+  final String? dateRange;
+  final bool showBox;
 
-  GetTransfersSuccess({required this.list});
+  GetTransfersSuccess( {
+    required this.list,
+    required this.hasReachedEnd,
+    required this.currentPage,
+    this.isLoadingMore = false,
+    required this.rate,
+    this.totalTransfers, this.totalAmountReceived, this.totalBalanceEgp,
+    this.search,
+    this.status,
+    this.transferType,
+    this.tagId,
+    this.dateRange,
+    required this.showBox
+  });
 }
 
-final class GetTransfersFailure extends TransferState {
+class GetTransfersFailure extends TransferState {
   final String errMessage;
 
   GetTransfersFailure({required this.errMessage});
 }
 
-final class StoreTransferLoading extends TransferState {}
+// Store Transfer States
+class StoreTransferLoading extends TransferState {}
 
-final class StoreTransferSuccess extends TransferState {
+class StoreTransferSuccess extends TransferState {
   final String message;
 
   StoreTransferSuccess({required this.message});
 }
 
-final class StoreTransferFailure extends TransferState {
+class StoreTransferFailure extends TransferState {
   final String errMessage;
 
   StoreTransferFailure({required this.errMessage});
 }
 
-final class UpdateTransferLoading extends TransferState {}
+// Update Transfer States
+class UpdateTransferLoading extends TransferState {}
 
-final class UpdateTransferSuccess extends TransferState {
+class UpdateTransferSuccess extends TransferState {
   final String message;
 
   UpdateTransferSuccess({required this.message});
 }
 
-final class UpdateTransferFailure extends TransferState {
+class UpdateTransferFailure extends TransferState {
   final String errMessage;
 
   UpdateTransferFailure({required this.errMessage});
 }
 
-final class DeleteTransferLoading extends TransferState {}
+// Delete Transfer States
+class DeleteTransferLoading extends TransferState {}
 
-final class DeleteTransferSuccess extends TransferState {
+class DeleteTransferSuccess extends TransferState {
   final String message;
 
   DeleteTransferSuccess({required this.message});
 }
 
-final class DeleteTransferFailure extends TransferState {
+class DeleteTransferFailure extends TransferState {
   final String errMessage;
 
   DeleteTransferFailure({required this.errMessage});
 }
-final class AutoCompleteLoading extends TransferState {}
 
-final class AutoCompleteSuccess extends TransferState {
+// Auto Complete States
+class AutoCompleteLoading extends TransferState {}
+
+class AutoCompleteSuccess extends TransferState {
   final List<AutoCompleteModel> autoCompleteList;
 
   AutoCompleteSuccess({required this.autoCompleteList});
 }
 
-final class AutoCompleteFailure extends TransferState {
+class AutoCompleteFailure extends TransferState {
   final String errMessage;
 
   AutoCompleteFailure({required this.errMessage});
 }
 
-final class StoreTagLoading extends TransferState {}
+// Tag States
+class StoreTagLoading extends TransferState {}
 
-final class StoreTagSuccess extends TransferState {
-  final String tagId;
+class StoreTagSuccess extends TransferState {
+  final String title;
+  final int id;
 
-  StoreTagSuccess({required this.tagId});
+  StoreTagSuccess({required this.title,required this.id});
 }
 
-final class StoreTagFailure extends TransferState {
+class StoreTagFailure extends TransferState {
   final String errMessage;
 
   StoreTagFailure({required this.errMessage});
 }
+
+// Image Picked State
+class ImagePickedState extends TransferState {
+  final File image;
+
+  ImagePickedState({required this.image});
+}
+class CurrencyExchanged extends TransferState{
+  final double currencyExchange;
+
+  CurrencyExchanged({required this.currencyExchange});
+}
+class PartialUpdateCustomerLoading extends TransferState {}
+
+class PartialUpdateCustomerSuccess extends TransferState {
+  final String message;
+
+  PartialUpdateCustomerSuccess({required this.message});
+}
+
+class PartialUpdateCustomerFailure extends TransferState {
+  final String errMessage;
+
+  PartialUpdateCustomerFailure({required this.errMessage});
+}
+
+class SendMoneyLoading extends TransferState {}
+
+class SendMoneySuccess extends TransferState {
+  final String message;
+
+  SendMoneySuccess({required this.message});
+}
+
+class SendMoneyFailure extends TransferState {
+  final String errMessage;
+
+  SendMoneyFailure({required this.errMessage});
+}
+class UpdateImageLoading extends TransferState{}
+class UpdateImageSuccess extends TransferState{}
+class UpdateImageFailure extends TransferState{}
+class GetTagsSuccess extends TransferState{
+  final List<AutoCompleteModel>list;
+
+  GetTagsSuccess({required this.list});
+}
+class GetTagsFailure extends TransferState{}
+class GetTagsLoading extends TransferState{}

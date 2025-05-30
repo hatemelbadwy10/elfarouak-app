@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:elfarouk_app/core/network/api_constants.dart';
@@ -11,12 +12,14 @@ import '../../domain/entity/transfer_entity.dart';
 import '../model/store_tranfer_model.dart';
 
 abstract class TransfersDataSource {
-  Future<List<TransferEntity>> getTransfers({
+  Future<TransfersEntity> getTransfers({
     String? search,
     String? status,
     String? transferType,
     String? tagId,
     String? dateRange,
+    int page = 1,
+    bool isHome =false
   });
 
   Future storeTransfer(StoreTransferModel model);
@@ -25,9 +28,22 @@ abstract class TransfersDataSource {
 
   Future deleteTransfer(int id);
 
-  Future<List<AutoCompleteModel>> autoCompleteSearch(String listType, String text);
+  Future<List<AutoCompleteModel>> autoCompleteSearch(
+      String listType, String text);
 
-  Future addTag(String tag);
+  Future addTag(String tag,String type);
+
+  Future partialUpdate(int customerId,
+      {double? balance, String? transferType, String? type});
+
+  Future sendMoney(
+      int fromCashBoxId, int toCashBoxId, double amount, String? note);
+
+  Future updatePhoto(int id, File image);
+
+  Future getTags(String type);
+
+  Future updateStatus(int id, String status);
 }
 
 class TransfersDataSourceImpl extends TransfersDataSource {
@@ -36,16 +52,20 @@ class TransfersDataSourceImpl extends TransfersDataSource {
   TransfersDataSourceImpl(this._apiService);
 
   @override
-  Future<List<TransferEntity>> getTransfers({
+  Future<TransfersEntity> getTransfers({
     String? search,
     String? status,
     String? transferType,
     String? tagId,
     String? dateRange,
+    int page = 1,
+    bool isHome =false
   }) async {
-    final queryParameters = <String, String>{};
+    final queryParameters = <String, String>{
+      'page': page.toString(),
+      "page_size": "10"
+    };
 
-    // Add the filters dynamically based on provided arguments
     if (search?.isNotEmpty ?? false) {
       queryParameters['search'] = search!;
     }
@@ -55,33 +75,37 @@ class TransfersDataSourceImpl extends TransfersDataSource {
     if (transferType != null) {
       queryParameters['transfer_type'] = transferType;
     }
-    if (tagId != null) {
+    if (tagId != null && tagId.toLowerCase() != 'null') {
       queryParameters['tag_id'] = tagId;
     }
-    if (dateRange?.isNotEmpty ?? false) {
-      queryParameters['date_range'] = dateRange!;
+    if (dateRange != null &&
+        dateRange.isNotEmpty &&
+        dateRange.toLowerCase() != 'null') {
+      queryParameters['date_range'] = dateRange;
     }
-
-    final uri = Uri.parse(ApiConstants.getTransfers).replace(queryParameters: queryParameters);
+    final uri = Uri.parse(ApiConstants.getTransfers)
+        .replace(queryParameters: queryParameters);
 
     try {
-      final response = await _apiService.get(uri.toString());
+      final response = await _apiService.get(uri.toString(),queryParameters: {
+        "is_home":isHome,
+      });
 
       log('getTransfers response: $response');
 
       return response.fold(
-            (l) {
+        (l) {
           throw ServerException(errorModel: l);
         },
-            (r) {
-          final List<dynamic> dataJson = r.data['data']['data'];
-          final transfers = dataJson.map((e) => Datum.fromJson(e)).toList();
+        (r) {
+          final dynamic dataJson = r.data['data'];
+          final transfers = Data.fromJson(dataJson);
           return transfers;
         },
       );
     } catch (e) {
       log('Error fetching transfers: $e');
-      rethrow; // Rethrow the error after logging it
+      rethrow;
     }
   }
 
@@ -98,11 +122,11 @@ class TransfersDataSourceImpl extends TransfersDataSource {
       log('storeTransfer response: $response');
 
       return response.fold(
-            (l) {
+        (l) {
           log('storeTransfer error: ${l.message}');
           throw ServerException(errorModel: l);
         },
-            (r) {
+        (r) {
           log('storeTransfer success: ${r.message}');
           return r.data['message'];
         },
@@ -121,11 +145,11 @@ class TransfersDataSourceImpl extends TransfersDataSource {
       log('updateTransfer response: $response');
 
       return response.fold(
-            (l) {
+        (l) {
           log('update error: $l');
           throw ServerException(errorModel: l);
         },
-            (r) {
+        (r) {
           return r.data['message'];
         },
       );
@@ -143,10 +167,10 @@ class TransfersDataSourceImpl extends TransfersDataSource {
       log('deleteTransfer response: $response');
 
       return response.fold(
-            (l) {
+        (l) {
           throw ServerException(errorModel: l);
         },
-            (r) {
+        (r) {
           return r.data['message'];
         },
       );
@@ -157,15 +181,17 @@ class TransfersDataSourceImpl extends TransfersDataSource {
   }
 
   @override
-  Future<List<AutoCompleteModel>> autoCompleteSearch(String listType, String text) async {
+  Future<List<AutoCompleteModel>> autoCompleteSearch(
+      String listType, String text) async {
     try {
-      final result = await _apiService.get(ApiConstants.autoComplete(listType, text));
+      final result =
+          await _apiService.get(ApiConstants.autoComplete(listType, text));
 
       return result.fold(
-            (l) {
+        (l) {
           throw ServerException(errorModel: l);
         },
-            (r) {
+        (r) {
           final autoCompleteData = (r.data['data'] as List)
               .map((item) => AutoCompleteModel.fromJson(item))
               .toList();
@@ -179,24 +205,131 @@ class TransfersDataSourceImpl extends TransfersDataSource {
   }
 
   @override
-  Future addTag(String tag) async {
+  Future addTag(String tag,String type) async {
     try {
       final result = await _apiService.post(
         ApiConstants.storeTag,
-        body: {"name": tag, "status": "active"},
+        body: {"name": tag, "status": "active",
+        "tag_type":type
+        },
       );
 
       return result.fold(
-            (l) {
+        (l) {
           throw ServerException(errorModel: l);
         },
-            (r) {
-          return r.message;
+        (r) {
+          log("r.data['data'] ${r.data['data']}");
+          return AutoCompleteModel.fromJson(r.data['data']);
         },
       );
     } catch (e) {
       log('Error adding tag: $e');
       rethrow;
     }
+  }
+
+  @override
+  Future partialUpdate(
+    int customerId, {
+    double? balance,
+    String? transferType,
+    String? type,
+  }) async {
+    final formData = FormData.fromMap({
+      if (balance != null) 'balance': balance,
+      if (transferType != null) 'transfer_type': transferType,
+      if (type != null) 'type': type,
+    });
+
+    try {
+      final response = await _apiService.put(
+        'customer/partial-update/$customerId',
+        body: formData,
+      );
+
+      log('partialUpdate request: $formData');
+      log('partialUpdate response: $response');
+
+      return response.fold(
+        (l) {
+          log('partialUpdate error: ${l.message}');
+          throw ServerException(errorModel: l);
+        },
+        (r) {
+          log('partialUpdate success: ${r.message}');
+          return r.data['message'];
+        },
+      );
+    } catch (e) {
+      log('Error in partialUpdate: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future sendMoney(
+      int fromCashBoxId, int toCashBoxId, double amount, String? note) async {
+    final result = await _apiService.post("cash-box/$fromCashBoxId/transfer",
+        body: {"amount": amount, "to_cash_box_id": toCashBoxId, "note": note});
+    return result.fold((l) {
+      throw ServerException(errorModel: l);
+    }, (r) {
+      return r.data['message'];
+    });
+  }
+
+  @override
+  Future<String> updatePhoto(int id, File image) async {
+    final fileName = image.path.split('/').last;
+
+    final formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(
+        image.path,
+        filename: fileName,
+      ),
+    });
+
+    final response = await _apiService.post(
+      "transfer/image-update/$id",
+      body: formData,
+    );
+
+    return response.fold((l) {
+      throw ServerException(errorModel: l);
+    }, (r) {
+      return r.data['message'];
+    });
+  }
+
+  @override
+  Future getTags(String type) async {
+    final result =
+        await _apiService.get("tag/select-list?tag_type=$type");
+    return result.fold((l) {
+      throw ServerException(errorModel: l);
+    }, (r) {
+      final autoCompleteData = (r.data['data'] as List)
+          .map((item) => AutoCompleteModel.fromJson(item))
+          .toList();
+      return autoCompleteData;
+    });
+  }
+
+  @override
+  Future updateStatus(int id, String status) async {
+    final response = await _apiService.put(
+      "transfer/status-update/$id?status=$status",
+    );
+    log(' staues ${status}');
+    log(' id ${id}');
+
+    return response.fold((l) {
+      log('exeption ${l}');
+      throw ServerException(errorModel: l);
+    }, (r) {
+      log(' r ${status}');
+      return r.data['message'];
+    });
   }
 }

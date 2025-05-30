@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dartz/dartz.dart';
 import 'package:elfarouk_app/core/network/exception/server_exception.dart';
 import 'package:elfarouk_app/core/network/models/api_error_model.dart';
@@ -15,13 +17,25 @@ class TransferRepoImpl extends TransferRepo {
   TransferRepoImpl(this._transferDataSource);
 
   @override
-  Future<Either<ApiFaliureModel, List<TransferEntity>>> getTransfers({String? search,
+  Future<Either<ApiFaliureModel, TransfersEntity>> getTransfers({
+    String? search,
     String? status,
     String? transferType,
     int? tagId,
-    String? dateRange,}) async {
+    String? dateRange,
+    int page = 1,
+    bool? isHome
+  }) async {
     try {
-      final result = await _transferDataSource.getTransfers();
+      final result = await _transferDataSource.getTransfers(
+        search: search,
+        status: status,
+        transferType: transferType,
+        tagId: tagId.toString(),
+        dateRange: dateRange,
+        page: page,
+        isHome: isHome??false
+      );
       return Right(result);
     } on ServerException catch (failure) {
       return Left(failure.errorModel);
@@ -73,13 +87,76 @@ class TransferRepoImpl extends TransferRepo {
   }
 
   @override
-  Future<Either<ApiFaliureModel, String>> storeTag(String name)async {
-try{
-  final result =await _transferDataSource.addTag(name);
-  return Right(result);
-}on ServerException catch (failure) {
-  return Left(failure.errorModel);
-}
+  Future<Either<ApiFaliureModel, AutoCompleteModel>> storeTag(String name,String type) async {
+    try {
+      final result = await _transferDataSource.addTag(name,type);
+      return Right(result);
+    } on ServerException catch (failure) {
+      return Left(failure.errorModel);
+    }
+  }
 
+  @override
+  Future<Either<ApiFaliureModel, String>> partialUpdate(
+    int customerId, {
+    double? balance,
+    String? transferType,
+    String? type,
+  }) async {
+    try {
+      final result = await _transferDataSource.partialUpdate(
+        customerId,
+        balance: balance,
+        transferType: transferType,
+        type: type,
+      );
+      return Right(result);
+    } on ServerException catch (failure) {
+      return Left(failure.errorModel);
+    }
+  }
+
+  @override
+  Future<Either<ApiFaliureModel, String>> sendMoney(
+      int fromCashBoxId, int toCashBoxId, double amount, String? note) async {
+    try {
+      final result = await _transferDataSource.sendMoney(
+          fromCashBoxId, toCashBoxId, amount, note);
+      return Right(result);
+    } on ServerException catch (failure) {
+      return Left(failure.errorModel);
+    }
+  }
+
+  @override
+  Future<Either<ApiFaliureModel, String>> updateImage(
+      int transferId, File image) async {
+    try {
+      final result = await _transferDataSource.updatePhoto(transferId, image);
+      return Right(result);
+    } on ServerException catch (failure) {
+      return Left(failure.errorModel);
+    }
+  }
+
+  @override
+  Future<Either<ApiFaliureModel, List<AutoCompleteModel>>> getTags(String type)async {
+  try {
+    final result = await _transferDataSource.getTags(type);
+    return Right(result);
+  } on ServerException catch (failure) {
+    return Left(failure.errorModel);
+  }
+  }
+
+  @override
+  Future<Either<ApiFaliureModel, String>> updateStatus(int id, String status)async {
+   try{
+     final result = await _transferDataSource.updateStatus(id, status);
+     return Right(result);
+   }
+   on ServerException catch (failure) {
+     return Left(failure.errorModel);
+   }
   }
 }

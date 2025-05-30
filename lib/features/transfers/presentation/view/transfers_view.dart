@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -9,39 +11,96 @@ import '../../domain/entity/transfer_entity.dart';
 import '../controller/transfer_bloc.dart';
 import '../widgets/filter_widget.dart';
 
-class TransferScreen extends StatelessWidget {
-  const TransferScreen({super.key});
+class TransferScreen extends StatefulWidget {
+  const TransferScreen({super.key, required this.argument});
+
+  final Map<String, dynamic> argument;
+
+  @override
+  State<TransferScreen> createState() => _TransferScreenState();
+}
+
+class _TransferScreenState extends State<TransferScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Add scroll listener for pagination
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Check if we're near the bottom of the list (within 200 pixels)
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      final state = context.read<TransferBloc>().state;
+      if (state is GetTransfersSuccess &&
+          !state.hasReachedEnd &&
+          !state.isLoadingMore) {
+        log('state ${state.status}');
+        log('state ${state.dateRange}');
+        log('state ${state.search}');
+        log('state ${state.transferType}');
+
+        // Get current filters (you might need to store these in your widget state)
+        context.read<TransferBloc>().add(
+              LoadMoreTransfersEvent(
+                  status: state.status,
+                dateRange: state.dateRange,
+                search: state.search,
+                transferType: state.transferType
+
+              ),
+            );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('التحويلات'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.filter_alt_outlined),
-              onPressed: () async {
-                await showDialog(
-                  context: context,
-                  builder: (dialogContext) => BlocProvider.value(
-                    value: BlocProvider.of<TransferBloc>(context),
-                    child:  const FilterDialog(),
-                  ),
-                );
-              },
-            )
-          ],
-          ),
+      appBar: AppBar(
+        title: const Text('التحويلات'),
+        actions: [
+          IconButton(onPressed: (){
+            context.read<TransferBloc>().add(GetTransfersEvent());
+          }, icon: const Icon(Icons.lock_reset)),
+          IconButton(
+            icon: const Icon(Icons.filter_alt_outlined),
+            onPressed: () async {
+              await showDialog(
+                context: context,
+                builder: (dialogContext) => BlocProvider.value(
+                  value: BlocProvider.of<TransferBloc>(context),
+                  child: const FilterDialog(),
+                ),
+              );
+            },
+          )
+        ],
+      ),
       body: BlocConsumer<TransferBloc, TransferState>(
         listener: (context, state) {
           // Handle success or failure of transfer actions
           if (state is StoreTransferSuccess) {
-            getIt<NavigationService>().navigateToAndReplace(RouteNames.transfersView);
+            getIt<NavigationService>()
+                .navigateToAndReplace(RouteNames.transfersView);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('تم إضافة التحويل بنجاح')),
             );
           } else if (state is StoreTransferFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('حدث خطأ أثناء إضافة التحويل: ${state.errMessage}')),
+              SnackBar(
+                  content:
+                      Text('حدث خطأ أثناء إضافة التحويل: ${state.errMessage}')),
             );
           }
         },
@@ -53,29 +112,50 @@ class TransferScreen extends StatelessWidget {
           } else if (state is GetTransfersSuccess) {
             final List<TransferEntity> transfers = state.list;
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: transfers.length,
-              itemBuilder: (context, index) {
-                final transfer = transfers[index];
+            if (transfers.isEmpty) {
+              return const Center(child: Text('لا توجد تحويلات'));
+            }
 
-                return GestureDetector(
-                  onTap: () {
-                    getIt<NavigationService>().navigateTo(RouteNames.singleTransferView, arguments: {
-                      //'transfer_id': transfer.,
-                      "transfer":state.list[index],
-                      'sender_name': transfer.senderName,
-                      'receiver_name': transfer.receiverName,
-                      'amount': transfer.amountReceived,
-                      'status': 'pending',
-                    });
-                  },
-                  child: TransferCard(
-                    isSender: true,
-                   transfer:transfer,
-                  ),
-                );
+            return RefreshIndicator(
+              onRefresh: () async{
+                context.read<TransferBloc>().add(GetTransfersEvent());
               },
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                itemCount: transfers.length + (state.isLoadingMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == transfers.length) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+
+                  final transfer = transfers[index];
+
+                  return GestureDetector(
+                    onTap: () {
+                      getIt<NavigationService>()
+                          .navigateTo(RouteNames.singleTransferView, arguments: {
+                        "transfer": state.list[index],
+                        'sender_name': transfer.senderName,
+                        'receiver_name': transfer.receiverName,
+                        'amount': transfer.amountReceived,
+                        'status': 'pending',
+                        "exchange_fee": state.rate
+                      });
+                    },
+                    child: TransferCard(
+                      exchangeFee: state.rate,
+                      isSender: true,
+                      transfer: transfer,
+                    ),
+                  );
+                },
+              ),
             );
           } else {
             return const SizedBox(); // fallback if no state
@@ -84,7 +164,9 @@ class TransferScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          getIt<NavigationService>().navigateTo(RouteNames.addTransferView);
+          log('exchange_fee${widget.argument['exchange_fee']}');
+          getIt<NavigationService>().navigateTo(RouteNames.addTransferView,
+              arguments: {"exchange_fee": widget.argument['exchange_fee']});
         },
         backgroundColor: Theme.of(context).primaryColor,
         tooltip: 'إضافة تحويل',
