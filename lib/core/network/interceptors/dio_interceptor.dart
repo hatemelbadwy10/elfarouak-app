@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -11,17 +12,15 @@ import '../../utils/storage_keys.dart';
 
 class DioInterceptor extends Interceptor {
   @override
-  void onRequest(
-      RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     options.headers.addAll({
       "accept": "application/json",
       "content-type": "application/json",
     });
-    final token =
-        await getIt<SharedPrefServices>().getString(StorageKeys.token);
+
+    final token = await getIt<SharedPrefServices>().getString(StorageKeys.token);
     if (token != null) {
-      options.headers.addAll({"Authorization": "Bearer $token",
-      });
+      options.headers.addAll({"Authorization": "Bearer $token"});
     }
 
     handler.next(options);
@@ -29,43 +28,63 @@ class DioInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       handler.next(response);
       return;
     }
-    // if request not success, we can handle the global messages for all requests here or re-throw the error for specifc handling
-    // also we can refresh token and re-call the same request after token updated.
+
     late String message;
+
     switch (response.statusCode) {
       case 401:
-        message = "You are not authorized";
+        message = "أنت غير مصرح لك بالوصول.";
         getIt<SharedPrefServices>().clearLocalStorage();
-        getIt<NavigationService>()
-            .navigateToAndClearStack(RouteNames.loginScreen);
+        getIt<NavigationService>().navigateToAndClearStack(RouteNames.loginScreen);
         break;
+
       case 404:
-        message =
-            "You do not have access to this feature. Please contact your system administrator to proceed";
+        message = "ليس لديك صلاحية الوصول إلى هذه الميزة. يرجى التواصل مع مسؤول النظام.";
         break;
+
       case 422:
-        message = response.data['message'];
+        final data = response.data;
+        if (data['message'] != null && data['message'] is String) {
+          message = data['message'];
+        } else if (data['errors'] != null && data['errors'] is Map<String, dynamic>) {
+          final errors = data['errors'] as Map<String, dynamic>;
+          final firstKey = errors.keys.first;
+          final errorMessages = errors[firstKey];
+
+          if (errorMessages is List && errorMessages.isNotEmpty && errorMessages.first is String) {
+            message = errorMessages.first;
+          } else if (errorMessages is String) {
+            message = errorMessages;
+          } else {
+            message = "حدث خطأ في البيانات المدخلة.";
+          }
+        } else {
+          message = "حدث خطأ في البيانات المدخلة.";
+        }
         break;
+
       case 400:
       case 500:
       case 503:
-        message =
-            "We have been notified of this mistake and we are looking to fix it.";
+        message = "تم الإبلاغ عن هذا الخطأ، ونعمل على إصلاحه.";
         break;
+
       default:
-        message = "An unknown error occurred";
+        message = "حدث خطأ غير متوقع.";
         break;
     }
+
     ShowToastMessages.showMessage(
       message,
       backgroundColor: Colors.orangeAccent,
       textColor: Colors.black,
       toastLength: Toast.LENGTH_LONG,
     );
+
     handler.reject(DioException(
       requestOptions: response.requestOptions,
       response: response,
@@ -74,44 +93,61 @@ class DioInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    late String message;
-    switch (err.type) {
-      case DioExceptionType.connectionTimeout:
-        message =
-            "Connection timed out. Please check your internet connection.";
-        break;
-      case DioExceptionType.sendTimeout:
-        message = "Sending request timed out. Please try again later.";
-        break;
-      case DioExceptionType.receiveTimeout:
-        message = "Receiving response timed out. Please try again later.";
-        break;
-      case DioExceptionType.cancel:
-        message = "Request has been canceled.";
-        break;
-      case DioExceptionType.badCertificate:
-        message =
-            "Invalid SSL certificate. Please contact with technical support.";
-        break;
-      case DioExceptionType.badResponse:
-        message = "An error occurred. Please contact with technical support.";
-        break;
-      case DioExceptionType.connectionError:
-        message =
-            "Error establishing a connection. Please check your internet connection.";
-        break;
-      case DioExceptionType.unknown:
-        message = "An unknown error occurred. Please try again later.";
-        break;
-      default:
-        message = "An error occurred. Please try again later.";
+    String message = "حدث خطأ. حاول مرة أخرى.";
+    log("خطأ: ${err.response?.data}");
+
+    if (err.type == DioExceptionType.badResponse && err.response != null) {
+      final responseData = err.response?.data;
+
+      if (responseData is Map<String, dynamic>) {
+        if (responseData['message'] != null && responseData['message'] is String) {
+          message = responseData['message'];
+        } else if (responseData['errors'] != null && responseData['errors'] is Map<String, dynamic>) {
+          final errors = responseData['errors'] as Map<String, dynamic>;
+          final firstKey = errors.keys.first;
+          final errorMessages = errors[firstKey];
+
+          if (errorMessages is List && errorMessages.isNotEmpty && errorMessages.first is String) {
+            message = errorMessages.first;
+          } else if (errorMessages is String) {
+            message = errorMessages;
+          } else {
+            message = "حدث خطأ في البيانات المدخلة.";
+          }
+        }
+      }
+    } else {
+      switch (err.type) {
+        case DioExceptionType.connectionTimeout:
+          message = "انتهت مهلة الاتصال. تحقق من اتصال الإنترنت.";
+          break;
+        case DioExceptionType.sendTimeout:
+          message = "انتهت مهلة إرسال الطلب.";
+          break;
+        case DioExceptionType.receiveTimeout:
+          message = "انتهت مهلة استلام الرد.";
+          break;
+        case DioExceptionType.cancel:
+          message = "تم إلغاء الطلب.";
+          break;
+        case DioExceptionType.connectionError:
+          message = "فشل الاتصال بالخادم. تحقق من الشبكة.";
+          break;
+        case DioExceptionType.unknown:
+          message = "حدث خطأ غير معروف.";
+          break;
+        default:
+          message = "حدث خطأ. حاول مرة أخرى.";
+      }
     }
+
     ShowToastMessages.showMessage(
       message,
       backgroundColor: Colors.red,
       textColor: Colors.white,
       toastLength: Toast.LENGTH_LONG,
     );
+
     handler.reject(err);
   }
 }
