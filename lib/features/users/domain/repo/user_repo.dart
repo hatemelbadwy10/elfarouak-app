@@ -8,4 +8,5 @@ abstract class UserRepo{
   Future<Either<ApiFaliureModel,String>>storeUser(StoreUserModel storeUserModel);
   Future<Either<ApiFaliureModel,String>>updateUser(StoreUserModel storeUserModel,int id);
   Future<Either<ApiFaliureModel,String>>deleteUser(int id);
+  Future<Either<ApiFaliureModel,String>>userLogout(int id);
 }

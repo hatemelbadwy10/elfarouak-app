@@ -52,4 +52,14 @@ class UserRepoImpl extends UserRepo {
       return Left(failure.errorModel);
     }
   }
+
+  @override
+  Future<Either<ApiFaliureModel, String>> userLogout(int id) async {
+    try {
+      final result = await _userDataSource.userLogout(id);
+      return Right(result);
+    } on ServerException catch (failure) {
+      return Left(failure.errorModel);
+    }
+  }
 }

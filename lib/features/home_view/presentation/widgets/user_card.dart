@@ -1,17 +1,26 @@
+import 'dart:developer';
+
+import 'package:elfarouk_app/user_info/user_info_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:elfarouk_app/features/users/domain/entity/user_entity.dart';
 import 'package:elfarouk_app/core/utils/app_colors.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class UserCard extends StatelessWidget {
   final UserEntity userEntity;
   final VoidCallback onDelete;
   final VoidCallback onUpdate;
+  final VoidCallback onLogout;
+
 
   const UserCard({
     super.key,
     required this.userEntity,
     required this.onDelete,
     required this.onUpdate,
+    required this.onLogout, // add this
+
+
   });
 
   @override
@@ -98,19 +107,36 @@ class UserCard extends StatelessWidget {
               // Popup Menu for actions
               PopupMenuButton<String>(
                 onSelected: (value) {
+                  log("BlocProvider.of<UserInfoBloc>(context).state.user?.role == 'admin'${BlocProvider.of<UserInfoBloc>(context).state.user?.role == 'admin'}");
                   if (value == 'update') onUpdate();
                   if (value == 'delete') onDelete();
+                  if (value == 'logout') onLogout(); // Add this line
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'update',
-                    child: Text('تحديث'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Text('حذف'),
-                  ),
-                ],
+                itemBuilder: (context) {
+                  final isAdmin = BlocProvider.of<UserInfoBloc>(context).state.user?.role == 'admin';
+
+                  return [
+                    const PopupMenuItem(
+                      value: 'update',
+                      child: Text('تحديث'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('حذف'),
+                    ),
+                    if (isAdmin)
+                      const PopupMenuItem(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout, color: Colors.redAccent, size: 20),
+                            SizedBox(width: 8),
+                            Text('تسجيل خروج'),
+                          ],
+                        ),
+                      ),
+                  ];
+                },
                 icon: const Icon(Icons.more_vert),
               ),
             ],

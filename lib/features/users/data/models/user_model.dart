@@ -89,12 +89,12 @@ class Datum extends UserEntity {
     required this.deletedAt,
   }) : super(
             userName: name!,
-            userCountry: countryCode!,
+            userCountry: countryCode??"",
             userPhone: phone!,
             userAddress: '',
             userRole: role!,
             userId: id!,
-            userEmail: email!
+            userEmail: email??''
   );
 
   final int? id;

@@ -57,3 +57,16 @@ final class DeleteUserFailure extends UserState {
 
   DeleteUserFailure({required this.errMessage});
 }
+final class LogoutUserLoading extends UserState {}
+
+final class LogoutUserSuccess extends UserState {
+  final String message;
+
+  LogoutUserSuccess({required this.message});
+}
+
+final class LogoutUserFailure extends UserState {
+  final String errMessage;
+
+  LogoutUserFailure({required this.errMessage});
+}

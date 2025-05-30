@@ -72,6 +72,11 @@ class UsersView extends StatelessWidget {
                       } );
                     },
                     child: UserCard(
+                      onLogout: (){
+                        context
+                            .read<UserBloc>()
+                            .add(LogoutUserEvent( user.userId));
+                      },
                       userEntity: user,
                       onDelete: () {
                         context

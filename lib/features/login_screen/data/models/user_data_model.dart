@@ -33,6 +33,6 @@ class UserModel extends User {
         phone: json["phone"] ?? "",
         email: json["email"],
         role: json["role"],
-        countryCode: json['country_code']
+        countryCode: json['country_code']??''
       );
 }

@@ -16,6 +16,7 @@ abstract class UsersDataSource {
   Future updateUser(StoreUserModel storeUserModel, int id);
 
   Future deleteUser(int id);
+  Future userLogout(int id);
 }
 
 class UserDataSourceImpl extends UsersDataSource {
@@ -41,9 +42,13 @@ class UserDataSourceImpl extends UsersDataSource {
   Future storeUser(StoreUserModel storeUserModel) async {
     final response = await _apiService.post(ApiConstants.storeUser,
         body: storeUserModel.toJson());
+    log('response$response');
     log('storeUserModel.toJson()${storeUserModel.toJson()}');
     log('response $response');
     return response.fold((l) {
+      log("left status ${l.status}");
+      log("left data ${l.data}");
+      log("left message ${l.message}");
       throw ServerException(errorModel: l);
     }, (r) {
       return r.data['message'];
@@ -72,5 +77,24 @@ class UserDataSourceImpl extends UsersDataSource {
     }, (r) {
       return r.data['message'];
     });
+  }
+
+  @override
+  @override
+  Future userLogout(int id) async {
+    final url = 'api/v1/auth/logout-by-id/$id';
+    final response = await _apiService.post(url);
+
+    log('response $response');
+
+    return response.fold(
+          (l) {
+        log('error $l');
+        throw ServerException(errorModel: l);
+      },
+          (r) {
+        return r.data['message'];
+      },
+    );
   }
 }

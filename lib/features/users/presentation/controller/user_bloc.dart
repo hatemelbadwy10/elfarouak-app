@@ -22,6 +22,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     on<StoreUserEvent>(_storeUser);
     on<DeleteUserEvent>(_deleteUser);
     on<UpdateUserEvent>(_updateUser);
+    on<LogoutUserEvent>(_logoutUser);
   }
 
   void _getUsers(GetUserEvent event, Emitter<UserState> emit) async {
@@ -97,5 +98,20 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     }, (r) {
       emit(DeleteUserSuccess(message: r));
     });
+  }
+  void _logoutUser(LogoutUserEvent event, Emitter<UserState> emit) async {
+    emit(LogoutUserLoading());
+
+    final result = await _userRepo.userLogout(event.userId);
+
+    result.fold(
+          (l) {
+        Fluttertoast.showToast(msg: l.message); // show error
+      },
+          (r) {
+        emit(LogoutUserSuccess(message: r));
+        Fluttertoast.showToast(msg: r); // show success
+      },
+    );
   }
 }

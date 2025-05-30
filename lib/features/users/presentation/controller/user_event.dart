@@ -56,3 +56,8 @@ class UpdateUserEvent extends UserEvent {
     required this.id
   });
 }
+class LogoutUserEvent extends UserEvent {
+  final int userId;
+
+  LogoutUserEvent(this.userId);
+}
