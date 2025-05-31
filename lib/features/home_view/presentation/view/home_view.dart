@@ -14,6 +14,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/components/custom/custom_button.dart';
 import '../../../transfers/presentation/controller/transfer_bloc.dart';
 import '../../../transfers/presentation/widgets/search_text_field.dart';
+import '../widgets/CustomerTransferBottomSheet.dart';
 import '../widgets/balance_card_widget.dart';
 import '../widgets/send_money_sheet.dart';
 
@@ -189,11 +190,11 @@ class _HomeViewState extends State<HomeView> {
                     '${formatter.format(yesterday)} - ${formatter.format(today)}';
 
                 context.read<TransferBloc>().add(
-                  GetTransfersEvent(
-                    status: "pending",
-                    dateRange: dateRange,
-                  ),
-                );
+                      GetTransfersEvent(
+                        status: "pending",
+                        dateRange: dateRange,
+                      ),
+                    );
               },
             );
           },
@@ -292,13 +293,15 @@ class _HomeViewState extends State<HomeView> {
                           balanceText = 'فشل';
                         }
 
-                        return  state is GetTransfersSuccess ? state.showBox? BalanceCardWidget(
-                          label: "  إجمالي رصيد الفروع ",
-                          balance: balanceText,
-                          color: Colors.blue,
-                        ):const SizedBox():const SizedBox(
-
-                        );
+                        return state is GetTransfersSuccess
+                            ? state.showBox
+                                ? BalanceCardWidget(
+                                    label: "  إجمالي رصيد الفروع ",
+                                    balance: balanceText,
+                                    color: Colors.blue,
+                                  )
+                                : const SizedBox()
+                            : const SizedBox();
                       },
                     ),
                   ],
@@ -509,6 +512,25 @@ class _HomeViewState extends State<HomeView> {
                         );
                       },
                     ),
+                    QuickActionWidget(
+                      icon: Icons.person,
+                      label: "تحويل بين العملاء",
+                      color: AppColors.primary,
+                      onPress: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          builder: (context) => BlocProvider(
+                            create: (context) => TransferBloc(getIt()),
+                            child: const CustomerTransferBottomSheet(),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -524,10 +546,9 @@ class _HomeViewState extends State<HomeView> {
                         const SizedBox(height: 4),
                         Text(
                           'الإجمالي: ${_hasLoadedInitialData && _initialTotalAmount != null ? _initialTotalAmount : state is GetTransfersSuccess ? state.totalAmountReceived : 0} جنيه',
-                          style:
-                              Styles.text13.copyWith(color: AppColors.primary,
-                              fontWeight: FontWeight.bold
-                              ),
+                          style: Styles.text13.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -568,11 +589,12 @@ class _HomeViewState extends State<HomeView> {
                                       DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
                                   final dateRange =
                                       '${formatter.format(yesterday)} - ${formatter.format(today)}';
-                                  context.read<TransferBloc>().add(
-                                      GetTransfersEvent(
-                                          status: "pending",
-                                          dateRange: dateRange,
-                                         ));
+                                  context
+                                      .read<TransferBloc>()
+                                      .add(GetTransfersEvent(
+                                        status: "pending",
+                                        dateRange: dateRange,
+                                      ));
                                 },
                                 icon: const Icon(Icons.refresh)),
                             Text(
@@ -648,11 +670,12 @@ class _HomeViewState extends State<HomeView> {
                                   DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
                               final dateRange =
                                   '${formatter.format(yesterday)} - ${formatter.format(today)}';
-                              context.read<TransferBloc>().add(
-                                  GetTransfersEvent(
-                                      status: "pending",
-                                      dateRange: dateRange,
-                                      isHome: true,
+                              context
+                                  .read<TransferBloc>()
+                                  .add(GetTransfersEvent(
+                                    status: "pending",
+                                    dateRange: dateRange,
+                                    isHome: true,
                                   ));
                             },
                             icon: const Icon(Icons.refresh, size: 18),
