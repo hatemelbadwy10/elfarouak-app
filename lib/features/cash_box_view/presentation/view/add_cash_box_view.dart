@@ -4,7 +4,9 @@ import 'package:elfarouk_app/core/components/custom/custom_text_field.dart';
 import 'package:elfarouk_app/core/services/navigation_service.dart';
 import 'package:elfarouk_app/core/services/services_locator.dart';
 import 'package:elfarouk_app/core/utils/app_colors.dart';
+import 'package:elfarouk_app/core/utils/enums.dart';
 import 'package:elfarouk_app/core/utils/styles.dart';
+import 'package:elfarouk_app/features/cash_box_view/presentation/controller/cash_box_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -99,12 +101,12 @@ class _AddCashBoxViewState extends State<AddCashBoxView> {
       ),
       body: BlocListener<CashBoxBloc, CashBoxState>(
         listener: (context, state) {
-          if (state is StoreCashBoxSuccess) {
+          if (state.requestStatus == RequestStatus.failure) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
+                  content: Text(state.storeCashBoxSuccess),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -112,12 +114,12 @@ class _AddCashBoxViewState extends State<AddCashBoxView> {
                 .navigateToAndReplace(RouteNames.cashBoxView);
           }
 
-          if (state is StoreCashBoxFailure) {
+          if (state.requestStatus == RequestStatus.failure) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
-                  content: Text(state.errMessage),
+                  content: Text(state.storeCashBoxSuccess),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -125,7 +127,7 @@ class _AddCashBoxViewState extends State<AddCashBoxView> {
         },
         child: BlocBuilder<CashBoxBloc, CashBoxState>(
           builder: (context, state) {
-            if (state is StoreCashBoxLoading || state is UpdateCashBoxLoading) {
+            if (state.requestStatus == RequestStatus.loading) {
               return const Center(child: CircularProgressIndicator());
             }
 

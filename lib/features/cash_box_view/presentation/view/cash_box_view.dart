@@ -1,3 +1,5 @@
+import 'package:elfarouk_app/core/utils/enums.dart';
+import 'package:elfarouk_app/features/cash_box_view/presentation/controller/cash_box_state.dart';
 import 'package:elfarouk_app/user_info/user_info_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,9 +19,9 @@ class CashBoxView extends StatelessWidget {
       appBar: AppBar(title: const Text('الصناديق النقدية')),
       body: BlocBuilder<CashBoxBloc, CashBoxState>(
         builder: (context, state) {
-          if (state is CashBoxLoading) {
+          if (state.requestStatus == RequestStatus.loading) {
             return const Center(child: CircularProgressIndicator());
-          } else if (state is CashBoxSuccess) {
+          } else if (state.requestStatus == RequestStatus.success) {
             return ListView.builder(
               itemCount: state.list.length,
               itemBuilder: (context, index) {
@@ -27,7 +29,9 @@ class CashBoxView extends StatelessWidget {
                 return CashBoxCard(
                   cashBox: cashBox,
                   onDelete: () {
-                    context.read<CashBoxBloc>().add(DeleteCashBoxEvent(id: cashBox.id));
+                    context
+                        .read<CashBoxBloc>()
+                        .add(DeleteCashBoxEvent(id: cashBox.id));
                   },
                   onUpdate: () {
                     getIt<NavigationService>().navigateTo(
@@ -45,21 +49,25 @@ class CashBoxView extends StatelessWidget {
                 );
               },
             );
-          } else if (state is CashBoxFailure) {
+          } else if (state.requestStatus == RequestStatus.failure) {
             return Center(child: Text('حدث خطأ: ${state.errMessage}'));
           } else {
             return const SizedBox();
           }
         },
       ),
-      floatingActionButton: context.read<UserInfoBloc>().state.user?.role=="admin"?FloatingActionButton(
-        onPressed: () {
-          getIt<NavigationService>().navigateTo(RouteNames.addCashBoxView);
-        },
-        backgroundColor: Theme.of(context).primaryColor,
-        tooltip: 'إضافة صندوق',
-        child: const Icon(Icons.add, color: Colors.white),
-      ):const SizedBox(),
+      floatingActionButton:
+          context.read<UserInfoBloc>().state.user?.role == "admin"
+              ? FloatingActionButton(
+                  onPressed: () {
+                    getIt<NavigationService>()
+                        .navigateTo(RouteNames.addCashBoxView);
+                  },
+                  backgroundColor: Theme.of(context).primaryColor,
+                  tooltip: 'إضافة صندوق',
+                  child: const Icon(Icons.add, color: Colors.white),
+                )
+              : const SizedBox(),
     );
   }
 }
