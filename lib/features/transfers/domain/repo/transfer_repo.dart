@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:elfarouk_app/core/network/models/api_error_model.dart';
 import 'package:elfarouk_app/features/transfers/data/model/auto_complete_model.dart';
+import 'package:elfarouk_app/features/transfers/data/model/customers_transfer_model.dart';
 import 'package:elfarouk_app/features/transfers/domain/entity/transfer_entity.dart';
 import '../../data/model/store_tranfer_model.dart';
 
@@ -34,4 +35,6 @@ abstract class TransferRepo {
       int transferId, File image, );
 Future<Either<ApiFaliureModel,List<AutoCompleteModel>>>getTags(String type);
 Future<Either<ApiFaliureModel,String>>updateStatus(int id , String status);
+Future<Either<ApiFaliureModel,String>>storeCustomerTransfer(CustomersTransferModel customer);
+Future<Either<ApiFaliureModel,TransferEntity>>getSingleTransfer (int id);
 }

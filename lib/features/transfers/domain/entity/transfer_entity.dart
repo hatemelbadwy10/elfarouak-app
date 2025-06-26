@@ -9,13 +9,15 @@ class TransfersEntity {
   final dynamic totalAmountReceived;
   final dynamic totalBalanceEgp;
   final bool showBox;
+  final List<CashBoxes>cashBoxes;
 
   TransfersEntity(
       {required this.list,
       required this.transferRate,
       required this.totalTransfers,
       required this.totalBalanceEgp,
-      required this.totalAmountReceived,required this.showBox
+      required this.totalAmountReceived,required this.showBox,
+        required this.cashBoxes
       });
 }
 
@@ -108,7 +110,7 @@ class TransferEntity {
       cashBoxName: datum.cashBox?.name,
       receiptImage: null,
       transferCreatedAt: datum.createdAt?.toString(),
-      sellerReceiverName: datum.sellerReceiver.name, // 👈 Safe now
+      sellerReceiverName: datum.sellerReceiver?.name, // 👈 Safe now
       sellerSenderName: datum.sellerSender?.name,     // 👈 Safe now
     );
   }

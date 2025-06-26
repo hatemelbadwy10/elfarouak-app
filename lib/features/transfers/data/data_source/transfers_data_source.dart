@@ -1,26 +1,25 @@
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:elfarouk_app/core/network/api_constants.dart';
 import 'package:elfarouk_app/core/network/exception/server_exception.dart';
 import 'package:elfarouk_app/core/network/network_provider/api_services.dart';
 import 'package:elfarouk_app/features/transfers/data/model/auto_complete_model.dart';
+import 'package:elfarouk_app/features/transfers/data/model/customers_transfer_model.dart';
 import 'package:elfarouk_app/features/transfers/data/model/transfer_model.dart';
 
 import '../../domain/entity/transfer_entity.dart';
 import '../model/store_tranfer_model.dart';
 
 abstract class TransfersDataSource {
-  Future<TransfersEntity> getTransfers({
-    String? search,
-    String? status,
-    String? transferType,
-    String? tagId,
-    String? dateRange,
-    int page = 1,
-    bool isHome =false
-  });
+  Future<TransfersEntity> getTransfers(
+      {String? search,
+      String? status,
+      String? transferType,
+      String? tagId,
+      String? dateRange,
+      int page = 1,
+      bool isHome = false});
 
   Future storeTransfer(StoreTransferModel model);
 
@@ -31,7 +30,7 @@ abstract class TransfersDataSource {
   Future<List<AutoCompleteModel>> autoCompleteSearch(
       String listType, String text);
 
-  Future addTag(String tag,String type);
+  Future addTag(String tag, String type);
 
   Future partialUpdate(int customerId,
       {double? balance, String? transferType, String? type});
@@ -44,6 +43,10 @@ abstract class TransfersDataSource {
   Future getTags(String type);
 
   Future updateStatus(int id, String status);
+
+  Future storeCustomerTransfer(CustomersTransferModel customer);
+
+  Future<TransferEntity> getSingleTransfer(int id);
 }
 
 class TransfersDataSourceImpl extends TransfersDataSource {
@@ -52,15 +55,14 @@ class TransfersDataSourceImpl extends TransfersDataSource {
   TransfersDataSourceImpl(this._apiService);
 
   @override
-  Future<TransfersEntity> getTransfers({
-    String? search,
-    String? status,
-    String? transferType,
-    String? tagId,
-    String? dateRange,
-    int page = 1,
-    bool isHome =false
-  }) async {
+  Future<TransfersEntity> getTransfers(
+      {String? search,
+      String? status,
+      String? transferType,
+      String? tagId,
+      String? dateRange,
+      int page = 1,
+      bool isHome = false}) async {
     final queryParameters = <String, String>{
       'page': page.toString(),
       "page_size": "10"
@@ -87,8 +89,8 @@ class TransfersDataSourceImpl extends TransfersDataSource {
         .replace(queryParameters: queryParameters);
 
     try {
-      final response = await _apiService.get(uri.toString(),queryParameters: {
-        "is_home":isHome,
+      final response = await _apiService.get(uri.toString(), queryParameters: {
+        "is_home": isHome,
       });
 
       log('getTransfers response: $response');
@@ -205,13 +207,11 @@ class TransfersDataSourceImpl extends TransfersDataSource {
   }
 
   @override
-  Future addTag(String tag,String type) async {
+  Future addTag(String tag, String type) async {
     try {
       final result = await _apiService.post(
         ApiConstants.storeTag,
-        body: {"name": tag, "status": "active",
-        "tag_type":type
-        },
+        body: {"name": tag, "status": "active", "tag_type": type},
       );
 
       return result.fold(
@@ -237,13 +237,14 @@ class TransfersDataSourceImpl extends TransfersDataSource {
     String? type,
   }) async {
     final formData = FormData.fromMap({
-      if (balance != null) 'balance': balance,
-      if (transferType != null) 'transfer_type': transferType,
-      if (type != null) 'type': type,
+      if (balance != null) 'balance_amount': balance,
+      if (transferType != null) 'balance_operation': transferType,
+      if (type != null) 'balance_operation': type,
+      "_method": 'put'
     });
 
     try {
-      final response = await _apiService.put(
+      final response = await _apiService.post(
         'customer/partial-update/$customerId',
         body: formData,
       );
@@ -304,8 +305,7 @@ class TransfersDataSourceImpl extends TransfersDataSource {
 
   @override
   Future getTags(String type) async {
-    final result =
-        await _apiService.get("tag/select-list?tag_type=$type");
+    final result = await _apiService.get("tag/select-list?tag_type=$type");
     return result.fold((l) {
       throw ServerException(errorModel: l);
     }, (r) {
@@ -330,6 +330,29 @@ class TransfersDataSourceImpl extends TransfersDataSource {
     }, (r) {
       log(' r ${status}');
       return r.data['message'];
+    });
+  }
+
+  @override
+  Future storeCustomerTransfer(customer) async {
+    final response = await _apiService.post("customer/transfer-balance",
+        body: customer.toJson());
+    return response.fold((l) {
+      throw ServerException(errorModel: l);
+    }, (r) {
+      return r.data['message'];
+    });
+  }
+
+  @override
+  Future<TransferEntity> getSingleTransfer(int id) async {
+    final response =
+        await _apiService.get("${ApiConstants.getSingleTransfer}$id");
+    return response.fold((l) {
+      throw ServerException(errorModel: l);
+    }, (r) {
+      final transferEntity = Datum.fromJson(r.data["data"]);
+      return transferEntity;
     });
   }
 }

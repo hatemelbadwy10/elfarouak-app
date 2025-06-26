@@ -22,21 +22,24 @@ class GetTransfersSuccess extends TransferState {
   final String? tagId;
   final String? dateRange;
   final bool showBox;
+  final List<CashBoxes> cashBoxes;
 
-  GetTransfersSuccess( {
-    required this.list,
-    required this.hasReachedEnd,
-    required this.currentPage,
-    this.isLoadingMore = false,
-    required this.rate,
-    this.totalTransfers, this.totalAmountReceived, this.totalBalanceEgp,
-    this.search,
-    this.status,
-    this.transferType,
-    this.tagId,
-    this.dateRange,
-    required this.showBox
-  });
+  GetTransfersSuccess(
+      {required this.list,
+      required this.hasReachedEnd,
+      required this.currentPage,
+      this.isLoadingMore = false,
+      required this.rate,
+      this.totalTransfers,
+      this.totalAmountReceived,
+      this.totalBalanceEgp,
+      this.search,
+      this.status,
+      this.transferType,
+      this.tagId,
+      this.dateRange,
+      required this.showBox,
+      required this.cashBoxes});
 }
 
 class GetTransfersFailure extends TransferState {
@@ -112,7 +115,7 @@ class StoreTagSuccess extends TransferState {
   final String title;
   final int id;
 
-  StoreTagSuccess({required this.title,required this.id});
+  StoreTagSuccess({required this.title, required this.id});
 }
 
 class StoreTagFailure extends TransferState {
@@ -127,11 +130,13 @@ class ImagePickedState extends TransferState {
 
   ImagePickedState({required this.image});
 }
-class CurrencyExchanged extends TransferState{
+
+class CurrencyExchanged extends TransferState {
   final double currencyExchange;
 
   CurrencyExchanged({required this.currencyExchange});
 }
+
 class PartialUpdateCustomerLoading extends TransferState {}
 
 class PartialUpdateCustomerSuccess extends TransferState {
@@ -159,13 +164,55 @@ class SendMoneyFailure extends TransferState {
 
   SendMoneyFailure({required this.errMessage});
 }
-class UpdateImageLoading extends TransferState{}
-class UpdateImageSuccess extends TransferState{}
-class UpdateImageFailure extends TransferState{}
-class GetTagsSuccess extends TransferState{
-  final List<AutoCompleteModel>list;
+
+class UpdateImageLoading extends TransferState {}
+
+class UpdateImageSuccess extends TransferState {}
+
+class UpdateImageFailure extends TransferState {}
+
+class GetTagsSuccess extends TransferState {
+  final List<AutoCompleteModel> list;
 
   GetTagsSuccess({required this.list});
 }
-class GetTagsFailure extends TransferState{}
-class GetTagsLoading extends TransferState{}
+
+class GetTagsFailure extends TransferState {}
+
+class GetTagsLoading extends TransferState {}
+
+class AddOrSearchCustomer extends TransferState {
+  final bool addSender;
+  final bool addReceiver;
+
+  AddOrSearchCustomer({this.addSender = false, this.addReceiver = false});
+
+  AddOrSearchCustomer copyWith({
+    bool? addSender,
+    bool? addReceiver,
+  }) {
+    return AddOrSearchCustomer(
+      addSender: addSender ?? this.addSender,
+      addReceiver: addReceiver ?? this.addReceiver,
+    );
+  }
+}
+
+class UpdateStatusSuccess extends TransferState {}
+
+class StoreCustomerTransferLoading extends TransferState {}
+
+class StoreCustomerTransferSuccess extends TransferState {}
+
+class StoreCustomerTransferFailure extends TransferState {}
+class GetSingleTransferLoading extends TransferState{}
+class GetSingleTransferSuccess extends TransferState{
+  final TransferEntity transferEntity;
+
+  GetSingleTransferSuccess({required this.transferEntity});
+}
+class GetSingleTransferFailure extends TransferState{
+  final String errMessage;
+
+  GetSingleTransferFailure({required this.errMessage});
+}

@@ -1,4 +1,3 @@
-import 'dart:developer';
 
 import '../../domain/entity/transfer_entity.dart';
 
@@ -23,19 +22,23 @@ class TransferModel {
 }
 
 class Data extends TransfersEntity {
-  Data({required this.transfers,
+  Data({
+    required this.transfers,
     required this.rate,
     required this.totalAmountReceived,
     required this.totalBalanceEgp,
     required this.totalTransfers,
-    required this.showBox
-  })
-      : super(
-      list: transfers?.data ?? [],
-      transferRate: rate ?? 0,
-      totalTransfers: totalTransfers,
-      totalAmountReceived: totalAmountReceived,
-      totalBalanceEgp: totalBalanceEgp,showBox: showBox);
+    required this.showBox,
+    required this.cashBoxes,
+  }) : super(
+    list: transfers?.data ?? [],
+    transferRate: rate ?? 0,
+    totalTransfers: totalTransfers,
+    totalAmountReceived: totalAmountReceived,
+    totalBalanceEgp: totalBalanceEgp,
+    showBox: showBox,
+    cashBoxes: cashBoxes
+  );
 
   final Transfers? transfers;
   final double? rate;
@@ -43,20 +46,23 @@ class Data extends TransfersEntity {
   final dynamic totalAmountReceived;
   final dynamic totalBalanceEgp;
   final bool showBox;
+  final List<CashBoxes> cashBoxes;
 
   factory Data.fromJson(Map<String, dynamic> json) {
-    log('json["total_transfers"]${json['total_transfers']}');
-    log('json["total_transfers"]${ json['total_balance_egp']}');
     return Data(
       transfers: json["transfers"] == null
           ? null
           : Transfers.fromJson(json["transfers"]),
       rate: json["rate"],
-      totalAmountReceived: double.parse(
-          json['total_amount_received'].toString()),
+      totalAmountReceived:
+      double.tryParse(json['total_amount_received'].toString()) ?? 0.0,
       totalBalanceEgp: json['total_balance_egp'],
       totalTransfers: json['total_transfers'],
-      showBox: json['show_box']??false
+      showBox: json['show_box'] ?? false,
+      cashBoxes: (json['cash_boxes'] as List<dynamic>?)
+          ?.map((e) => CashBoxes.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+          [],
     );
   }
 }
@@ -145,7 +151,7 @@ class Datum extends TransferEntity {
   }) : super(senderName: sender?.name ?? '',
       receiverName: receiver?.name,
       sellerSenderName: sellerSender?.name,
-      sellerReceiverName: sellerReceiver.name,
+      sellerReceiverName: sellerReceiver?.name,
       tagName: tag?.name,
       transferCreatedAt: createdAt.toString(),
       status: status,
@@ -161,9 +167,9 @@ class Datum extends TransferEntity {
       );
 
   final int? id;
-  final String? senderId;
+  final dynamic senderId;
   final Receiver? sender;
-  final String? receiverId;
+  final dynamic? receiverId;
   final Receiver? receiver;
   final String? amountSent;
   final String? currencySent;
@@ -172,15 +178,15 @@ class Datum extends TransferEntity {
   final String? dayExchangeRate;
   final String? exchangeRateWithFee;
   final String? transferType;
-  final String? cashBoxId;
+  final dynamic? cashBoxId;
   final CashBox? cashBox;
   final String? status;
   final String? note;
   final dynamic sellerReceiverId;
-  final CashBox sellerReceiver;
-  final String? sellerSenderId;
+  final CashBox? sellerReceiver;
+  final dynamic? sellerSenderId;
   final CashBox? sellerSender;
-  final String? tagId;
+  final dynamic? tagId;
   final Tag? tag;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -208,7 +214,7 @@ class Datum extends TransferEntity {
       image:json['image'],
       note: json["note"],
       sellerReceiverId: json["seller_receiver_id"],
-      sellerReceiver: CashBox.fromJson(json["seller_receiver"]),
+      sellerReceiver: CashBox.fromJson(json["seller_receiver"]??{}),
       sellerSenderId: json["seller_sender_id"],
       sellerSender: json["seller_sender"] == null
           ? null
@@ -227,7 +233,7 @@ class CashBox {
     required this.name,
   });
 
-  final String? id;
+  final dynamic? id;
   final String? name;
 
   factory CashBox.fromJson(Map<String, dynamic> json) {
@@ -245,7 +251,7 @@ class Receiver {
     required this.phone,
   });
 
-  final String? id;
+  final dynamic? id;
   final String? name;
   final String? phone;
 
@@ -308,6 +314,40 @@ class Link {
       url: json["url"],
       label: json["label"],
       active: json["active"],
+    );
+  }
+}
+class CashBoxes {
+  final int id;
+  final String name;
+  final String country;
+  final String currency;
+  final double balance;
+  final double balanceInEgp;
+  final double customersBalance;
+  final double expenses;
+
+  CashBoxes({
+    required this.id,
+    required this.name,
+    required this.country,
+    required this.currency,
+    required this.balance,
+    required this.balanceInEgp,
+    required this.customersBalance,
+    required this.expenses,
+  });
+
+  factory CashBoxes.fromJson(Map<String, dynamic> json) {
+    return CashBoxes(
+      id: json['id'],
+      name: json['name'],
+      country: json['country'],
+      currency: json['currency'],
+      balance: (json['balance'] ?? 0).toDouble(),
+      balanceInEgp: (json['balance_in_egp'] ?? 0).toDouble(),
+      customersBalance: (json['customers_balance'] ?? 0).toDouble(),
+      expenses: (json['expenses'] ?? 0).toDouble(),
     );
   }
 }

@@ -12,21 +12,19 @@ class UserCard extends StatelessWidget {
   final VoidCallback onUpdate;
   final VoidCallback onLogout;
 
-
   const UserCard({
     super.key,
     required this.userEntity,
     required this.onDelete,
     required this.onUpdate,
     required this.onLogout, // add this
-
-
   });
 
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      key: UniqueKey(), // make sure userId is unique
+      key: UniqueKey(),
+      // make sure userId is unique
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
@@ -93,11 +91,12 @@ class UserCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.location_on, size: 16, color: Colors.grey),
-                        SizedBox(width: 6),
-                        Text('مصر'),
+                        const Icon(Icons.location_on,
+                            size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text(userEntity.userCountry == 'LY' ? "ليبيا" : "مصر"),
                       ],
                     ),
                   ],
@@ -113,7 +112,9 @@ class UserCard extends StatelessWidget {
                   if (value == 'logout') onLogout(); // Add this line
                 },
                 itemBuilder: (context) {
-                  final isAdmin = BlocProvider.of<UserInfoBloc>(context).state.user?.role == 'admin';
+                  final isAdmin =
+                      BlocProvider.of<UserInfoBloc>(context).state.user?.role ==
+                          'admin';
 
                   return [
                     const PopupMenuItem(
@@ -129,7 +130,8 @@ class UserCard extends StatelessWidget {
                         value: 'logout',
                         child: Row(
                           children: [
-                            Icon(Icons.logout, color: Colors.redAccent, size: 20),
+                            Icon(Icons.logout,
+                                color: Colors.redAccent, size: 20),
                             SizedBox(width: 8),
                             Text('تسجيل خروج'),
                           ],

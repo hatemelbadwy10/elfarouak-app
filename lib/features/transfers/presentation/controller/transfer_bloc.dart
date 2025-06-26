@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:bloc/bloc.dart';
+import 'package:elfarouk_app/features/transfers/data/model/customers_transfer_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -9,6 +10,7 @@ import '../../../../core/services/navigation_service.dart';
 import '../../../../core/services/services_locator.dart';
 import '../../data/model/auto_complete_model.dart';
 import '../../data/model/store_tranfer_model.dart';
+import '../../data/model/transfer_model.dart';
 import '../../domain/entity/transfer_entity.dart';
 import '../../domain/repo/transfer_repo.dart';
 
@@ -37,6 +39,10 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
     on<UpdateImage>(_updateImage);
     on<GetTagsEvent>(_getTags);
     on<UpdateStatus>(_updateStatus);
+    on<ToggleSenderModeEvent>(_onToggleAddCustomer);
+    on<ToggleReceiverModeEvent>(_onToggleAddReceiver);
+    on<StoreCustomerTransferEvent>(_storeCustomerTransfer);
+    on<GetSingleTransferEvent>(_getSingleTransfer);
   }
 
   void _getTransfers(
@@ -55,14 +61,13 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
     isLoading = true;
 
     final result = await _transferRepo.getTransfers(
-      search: event.search,
-      status: event.status,
-      transferType: event.transferType,
-      tagId: event.tagId,
-      dateRange: event.dateRange,
-      page: currentPage,
-      isHome: event.isHome
-    );
+        search: event.search,
+        status: event.status,
+        transferType: event.transferType,
+        tagId: event.tagId,
+        dateRange: event.dateRange,
+        page: currentPage,
+        isHome: event.isHome);
 
     isLoading = false;
 
@@ -88,7 +93,14 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
             totalTransfers: r.totalTransfers,
             totalAmountReceived: r.totalAmountReceived,
             totalBalanceEgp: r.totalBalanceEgp,
-            showBox: r.showBox
+            showBox: r.showBox,
+            cashBoxes: r.cashBoxes,
+            // ✅ Preserve filter parameters from previous state
+            search: prevState.search,
+            dateRange: prevState.dateRange,
+            status: prevState.status,
+            transferType: prevState.transferType,
+            isLoadingMore: false, // Set to false after loading
           ));
         } else {
           log('r ${r.totalBalanceEgp}');
@@ -99,15 +111,15 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
               hasReachedEnd: hasReachedEnd,
               currentPage: currentPage,
               rate: r.transferRate,
-            totalTransfers: r.totalTransfers,
-            totalAmountReceived: r.totalAmountReceived,
-            totalBalanceEgp: r.totalBalanceEgp,
-            search: event.search,
-            dateRange: event.dateRange,
-            status: event.status,
-            transferType: event.transferType,
-            showBox: r.showBox
-          ));
+              totalTransfers: r.totalTransfers,
+              totalAmountReceived: r.totalAmountReceived,
+              totalBalanceEgp: r.totalBalanceEgp,
+              search: event.search,
+              dateRange: event.dateRange,
+              status: event.status,
+              transferType: event.transferType,
+              showBox: r.showBox,
+              cashBoxes: r.cashBoxes));
         }
 
         // Increment page for next load
@@ -125,24 +137,34 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
     if (state is GetTransfersSuccess && !isLoading && !hasReachedEnd) {
       final currentState = state as GetTransfersSuccess;
 
-      add(GetTransfersEvent(
-        search: event.search,
-        status: event.status,
-        transferType: event.transferType,
-        tagId: event.tagId,
-        dateRange: event.dateRange,
-        isLoadMore: true,
-        page: currentPage,
-      ));
-
-      // Show loading more indicator while keeping current list
+      // Show loading more indicator while keeping current list and filters
       emit(GetTransfersSuccess(
         rate: currentState.rate,
         list: currentState.list,
         hasReachedEnd: currentState.hasReachedEnd,
         currentPage: currentState.currentPage,
         isLoadingMore: true,
-        showBox: currentState.showBox
+        showBox: currentState.showBox,
+        cashBoxes: currentState.cashBoxes,
+        // ✅ Preserve filter parameters
+        search: currentState.search,
+        dateRange: currentState.dateRange,
+        status: currentState.status,
+        transferType: currentState.transferType,
+        totalTransfers: currentState.totalTransfers,
+        totalAmountReceived: currentState.totalAmountReceived,
+        totalBalanceEgp: currentState.totalBalanceEgp,
+      ));
+
+      // Use current state filters instead of event parameters for consistency
+      add(GetTransfersEvent(
+        search: currentState.search,
+        status: currentState.status,
+        transferType: currentState.transferType,
+        tagId: event.tagId,
+        dateRange: currentState.dateRange,
+        isLoadMore: true,
+        page: currentPage,
       ));
     }
   }
@@ -160,7 +182,13 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
         note: event.note,
         status: "pending",
         tagId: event.tagId,
-        exchangeRateWithFee: event.exchangeRateWithFee));
+        exchangeRateWithFee: event.exchangeRateWithFee,
+        customerSenderName: event.customerSenderName,
+        customerSenderPhone: event.customerSenderPhone,
+        customerReceiverCountry: event.customerReceiverCountry,
+        customerReceiverName: event.customerReceiverName,
+        customerReceiverPhone: event.customerReceiverPhone,
+        customerSenderCountry: event.customerSenderCountry));
 
     result.fold(
       (failure) {
@@ -248,16 +276,13 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
 
   void _storeTag(StoreTagEvent event, Emitter<TransferState> emit) async {
     emit(StoreTagLoading());
-    final result = await _transferRepo.storeTag(
-      event.tag,
-      event.type
-    );
+    final result = await _transferRepo.storeTag(event.tag, event.type);
     result.fold((l) {
       log('l $l');
       emit(StoreTagFailure(errMessage: l.message));
     }, (r) {
       log('r$r');
-      emit(StoreTagSuccess(title: r.label,id:r.id));
+      emit(StoreTagSuccess(title: r.label, id: r.id));
       Fluttertoast.showToast(msg: "تم الانشاء بنجاح");
     });
   }
@@ -333,25 +358,78 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
       Fluttertoast.showToast(msg: r);
     });
   }
-    Future<void>_getTags(GetTagsEvent event,Emitter<TransferState> emit )async{
-      final result = await _transferRepo.getTags(event.type);
-      result.fold((l) {
-        Fluttertoast.showToast(msg: l.data['message']);
-      }, (r) {
-        emit(GetTagsSuccess(list: r));
-      });
-    }
-    Future<void>_updateStatus(UpdateStatus event,Emitter<TransferState> emit )async{
+
+  Future<void> _getTags(GetTagsEvent event, Emitter<TransferState> emit) async {
+    final result = await _transferRepo.getTags(event.type);
+    result.fold((l) {
+      Fluttertoast.showToast(msg: l.data['message']);
+    }, (r) {
+      emit(GetTagsSuccess(list: r));
+    });
+  }
+
+  Future<void> _updateStatus(
+      UpdateStatus event, Emitter<TransferState> emit) async {
     final result = await _transferRepo.updateStatus(event.id, event.status);
-    result.fold((l){
+    result.fold((l) {
       log('l ${l.status}');
       log('l ${l.data}');
       log('l ${l.message}');
       Fluttertoast.showToast(msg: l.message);
-
-    }, (r){
-      log("r ${r}");
+    }, (r) {
+      //emit(UpdateStatusSuccess());
+      log("r $r");
       Fluttertoast.showToast(msg: r);
     });
-    }
+  }
+
+  bool _isAddCustomerMode = false;
+  bool _isAddReceiverMode = false;
+
+  void _onToggleAddCustomer(
+      ToggleSenderModeEvent event, Emitter<TransferState> emit) {
+    _isAddCustomerMode = !_isAddCustomerMode;
+    emit(AddOrSearchCustomer(
+      addSender: _isAddCustomerMode,
+      addReceiver: _isAddReceiverMode,
+    ));
+  }
+
+  void _onToggleAddReceiver(
+      ToggleReceiverModeEvent event, Emitter<TransferState> emit) {
+    _isAddReceiverMode = !_isAddReceiverMode;
+    emit(AddOrSearchCustomer(
+      addSender: _isAddCustomerMode,
+      addReceiver: _isAddReceiverMode,
+    ));
+  }
+
+  void _storeCustomerTransfer(
+      StoreCustomerTransferEvent event, Emitter<TransferState> emit) async {
+    emit(StoreCustomerTransferLoading());
+    final result = await _transferRepo.storeCustomerTransfer(
+        CustomersTransferModel(
+            senderId: event.senderId,
+            receiverId: event.receiverId,
+            amount: event.amount));
+    result.fold((l) {
+      Fluttertoast.cancel();
+      Fluttertoast.showToast(msg: l.message);
+      emit(StoreCustomerTransferFailure());
+    }, (r) {
+      emit(StoreCustomerTransferSuccess());
+      Fluttertoast.showToast(msg: r);
+    });
+  }
+
+  void _getSingleTransfer(
+      GetSingleTransferEvent event, Emitter<TransferState> emit) async {
+    emit(GetSingleTransferLoading());
+    final result = await _transferRepo.getSingleTransfer(event.id);
+    result.fold((l) {
+      emit(GetSingleTransferFailure(errMessage: l.message));
+    }, (r) {
+      emit(GetSingleTransferSuccess(transferEntity: r));
+    });
+  }
 }

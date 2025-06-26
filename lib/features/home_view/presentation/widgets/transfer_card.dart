@@ -1,8 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:easy_localization/easy_localization.dart';
-import 'package:elfarouk_app/features/home_view/presentation/widgets/quick_action_widget.dart';
 import 'package:elfarouk_app/features/transfers/domain/entity/transfer_entity.dart';
 import 'package:elfarouk_app/features/transfers/presentation/controller/transfer_bloc.dart';
 import 'package:flutter/material.dart';
@@ -96,14 +94,14 @@ class _TransferCardState extends State<TransferCard> {
                 );
               },
             ),
-            ListTile(
-              title: const Text('حذف الحواله'),
-              onTap: () {
-                context
-                    .read<TransferBloc>()
-                    .add(DeleteTransferEvent(id: widget.transfer.id!));
-              },
-            ),
+            // ListTile(
+            //   title: const Text('حذف الحواله'),
+            //   onTap: () {
+            //     context
+            //         .read<TransferBloc>()
+            //         .add(DeleteTransferEvent(id: widget.transfer.id!));
+            //   },
+            // ),
           ],
         );
       },
@@ -121,7 +119,7 @@ class _TransferCardState extends State<TransferCard> {
     }
   }
 
-  void _updateStatus(String newStatus) {
+  Future<void> _updateStatus(String newStatus) async {
     setState(() {
       status = newStatus;
     });
@@ -129,8 +127,9 @@ class _TransferCardState extends State<TransferCard> {
     context.read<TransferBloc>().add(
       UpdateStatus(status: newStatus, id: widget.transfer.id!),
     );
+    await Future.delayed(const Duration(milliseconds: 500));
 
-    if (widget.isHome == true && widget.onPress != null) {
+    if (widget.isHome == true && widget.onPress != null ) {
       widget.onPress!();
     }
   }
@@ -147,7 +146,8 @@ class _TransferCardState extends State<TransferCard> {
           RouteNames.singleTransferView,
           arguments: {
             "transfer": widget.transfer,
-            "exchange_fee": widget.exchangeFee
+            "exchange_fee": widget.exchangeFee,
+            "id":widget.transfer.id
           },
         );
       },
@@ -277,13 +277,13 @@ class _TransferCardState extends State<TransferCard> {
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'completed':
-      case 'تم':
+      case 'مكتمل':
         return Colors.green;
       case 'pending':
       case 'قيد الانتظار':
         return Colors.orange;
       case 'cancelled':
-      case 'ملغاة':
+      case 'ملغى':
         return Colors.red;
       default:
         return Colors.grey;

@@ -41,26 +41,37 @@ class LoadMoreTransfersEvent extends TransferEvent {
   });
 }
 class StoreTransferEvent extends TransferEvent {
-  final int senderId;
-  final int receiverId;
+  final int? senderId;
+  final int? receiverId;
   final String amountSent;
   final String transferType;
   final int? cashBoxId;
   final String note;
   final int tagId;
   final String exchangeRateWithFee;
+  final String? customerReceiverPhone;
+  final String? customerReceiverName;
+  final String? customerReceiverCountry;
+  final String? customerSenderPhone;
+  final String? customerSenderName;
+  final String? customerSenderCountry;
 
 
   StoreTransferEvent({
-    required this.senderId,
-    required this.receiverId,
+     this.senderId,
+     this.receiverId,
     required this.amountSent,
-
     required this.transferType,
      this.cashBoxId,
     required this.note,
     required this.tagId,
-    required this.exchangeRateWithFee
+    required this.exchangeRateWithFee,
+    this.customerReceiverCountry,
+    this.customerReceiverName,
+    this.customerReceiverPhone,
+    this.customerSenderCountry,
+    this.customerSenderName,
+    this.customerSenderPhone
   });
 }
 
@@ -166,4 +177,18 @@ class UpdateStatus extends TransferEvent{
   final int id;
 
   UpdateStatus({required this.status, required this.id});
+}
+class ToggleSenderModeEvent extends TransferEvent {}
+
+class ToggleReceiverModeEvent extends TransferEvent {}
+class StoreCustomerTransferEvent extends TransferEvent{
+  final int receiverId,senderId;
+final double amount;
+
+  StoreCustomerTransferEvent({required this.receiverId, required this.senderId, required this.amount});
+}
+class GetSingleTransferEvent extends TransferEvent{
+  final int id;
+
+  GetSingleTransferEvent({required this.id});
 }
