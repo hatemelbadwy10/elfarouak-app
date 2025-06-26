@@ -35,8 +35,8 @@ class _AddUserViewState extends State<AddUserView> {
   // Map Arabic role names to backend role keys
   final Map<String, String> roleMap = {
     'مدير': 'admin',
-    'مشرف': 'user',
-    'موظف': 'employee',
+    'مشرف': 'manger',
+    'موظف': 'user',
   };
 
   @override

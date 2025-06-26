@@ -28,6 +28,10 @@ class DioInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
+    log('response from  on response${response.data}');
+    log('response from  on response${response.statusCode}');
+    log('response from  on response${response.statusMessage}');
+
     if (response.statusCode == 200 || response.statusCode == 201) {
       handler.next(response);
       return;
@@ -93,8 +97,16 @@ class DioInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    log('response from  on response${err.response?.statusMessage}');
+    log('response from  on response${err.response?.statusCode}');
+    log('response from  on response${err.response?.statusMessage}');
+    log('response from  on response${err.message}');
+    log('response from  on response${err.error}');
+    log('response from  on response${err.type}');
+    log('response from  on response${err.message}');
     String message = "حدث خطأ. حاول مرة أخرى.";
     log("خطأ: ${err.response?.data}");
+
 
     if (err.type == DioExceptionType.badResponse && err.response != null) {
       final responseData = err.response?.data;

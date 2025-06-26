@@ -27,7 +27,7 @@ class CustomerEntity {
       customerId: json['id'],
       customerName: json['name'],
       customerPhone: json['phone'],
-      customerAddress: json['address'],
+      customerAddress: json['address']??"لا يوجد عنوان",
       customerGender: json['gender'],
       customerNote: json['note']??"لا يوجد ملاحظات",
       customerBalance: json['balance'],

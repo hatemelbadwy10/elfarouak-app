@@ -12,7 +12,7 @@ class SingleUserView extends StatelessWidget {
     final role = argument?['user_role'] ?? 'الدور غير متوفر';
     final address = argument?['user_address'] ?? 'العنوان غير متوفر';
     final phone = argument?['user_phone'] ?? 'غير متوفر';
-    final country = _getCountryName(argument?['user_country'] ?? 'eg');
+    final country = _getCountryName(argument?['user_country'] ?? 'EG');
 
     return Scaffold(
       appBar: AppBar(title: const Text('بيانات المستخدم')),

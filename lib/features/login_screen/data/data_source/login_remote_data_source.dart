@@ -1,4 +1,6 @@
 
+import 'dart:developer';
+
 import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/exception/server_exception.dart';
 import '../../../../core/network/network_provider/api_services.dart';
@@ -26,6 +28,7 @@ class LoginRemoteDatasourceImpl extends LoginRemoteDatasource {
       ApiConstants.login,
       body: loginParameteres.toJson(),
     );
+    log('response ${response}');
     return response.fold(
       (l) {
         throw ServerException(errorModel: l);

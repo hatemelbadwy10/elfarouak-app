@@ -97,8 +97,8 @@ class Datum extends CashBoxTransferEntity {
   );
 
   final int? id;
-  final String fromCashBoxIdRaw;
-  final String toCashBoxIdRaw;
+  final dynamic fromCashBoxIdRaw;
+  final dynamic toCashBoxIdRaw;
   final String amount;
   final String? currency;
   final dynamic notes;

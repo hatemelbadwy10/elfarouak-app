@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/components/custom/custom_button.dart';
 import '../controller/transfer_bloc.dart';
+import '../widgets/add_customer_form.dart';
 import '../widgets/add_tag_widget.dart';
 import '../widgets/search_text_field.dart';
 
@@ -30,6 +31,14 @@ class _AddTransferViewState extends State<AddTransferView> {
   final TextEditingController _branchController = TextEditingController();
   final TextEditingController _tagController = TextEditingController();
   final TextEditingController _exchangeFee = TextEditingController();
+  final TextEditingController _newSenderController = TextEditingController();
+  final TextEditingController _newReceiverController = TextEditingController();
+  final TextEditingController _newSenderPhoneController =
+      TextEditingController();
+  final TextEditingController _newReceiverPhoneController =
+      TextEditingController();
+  final countrySenderCodeNotifier = ValueNotifier<String?>(null);
+  final countryReceiverCodeNotifier = ValueNotifier<String?>(null);
 
   String _transactionType = 'direct';
   int? _senderId;
@@ -220,27 +229,117 @@ class _AddTransferViewState extends State<AddTransferView> {
                 key: _formKey,
                 child: ListView(
                   children: [
-                    SearchTextField(
-                      label: 'المرسل',
-                      textEditingController: _senderIdController,
-                      listType: "customer",
-                      onSuggestionSelected: (suggestion) {
-                        setState(() {
-                          _senderId = suggestion.id;
-                          _senderIdController.text = suggestion.label;
-                        });
+                    BlocBuilder<TransferBloc, TransferState>(
+                      builder: (context, state) {
+                        bool isAddSender = false;
+
+                        if (state is AddOrSearchCustomer) {
+                          isAddSender = state.addSender;
+                        }
+
+                        // Check if we are in store or update mode
+                        final isStoreMode = widget.argument?['transfer'] == null;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (isStoreMode)
+                              ElevatedButton(
+                                onPressed: () {
+                                  context.read<TransferBloc>().add(ToggleSenderModeEvent());
+                                },
+                                child: Text(
+                                  isAddSender ? '🔍 بحث عن مرسل' : '➕ إضافة مرسل',
+                                ),
+                              ),
+                            const SizedBox(height: 16),
+                            isStoreMode
+                                ? isAddSender
+                                ? AddCustomerForm(
+                              countryCodeNotifier: countrySenderCodeNotifier,
+                              nameController: _newSenderController,
+                              phoneController: _newSenderPhoneController,
+                            )
+                                : SearchTextField(
+                              label: 'المرسل',
+                              textEditingController: _senderIdController,
+                              listType: "customer",
+                              onSuggestionSelected: (suggestion) {
+                                setState(() {
+                                  _senderId = suggestion.id;
+                                  _senderIdController.text = suggestion.label;
+                                });
+                              },
+                            )
+                                : SearchTextField(
+                              label: 'المرسل',
+                              textEditingController: _senderIdController,
+                              listType: "customer",
+                              onSuggestionSelected: (suggestion) {
+                                setState(() {
+                                  _senderId = suggestion.id;
+                                  _senderIdController.text = suggestion.label;
+                                });
+                              },
+                            ),
+                          ],
+                        );
                       },
                     ),
                     const SizedBox(height: 10),
-                    SearchTextField(
-                      label: 'اسم المستفيد',
-                      textEditingController: _clientNameController,
-                      listType: "customer",
-                      onSuggestionSelected: (suggestion) {
-                        setState(() {
-                          _receiverId = suggestion.id;
-                          _clientNameController.text = suggestion.label;
-                        });
+                    BlocBuilder<TransferBloc, TransferState>(
+                      builder: (context, state) {
+                        bool isAddReceiver = false;
+                        if (state is AddOrSearchCustomer) {
+                          isAddReceiver = state.addReceiver;
+                        }
+
+                        final isStoreMode = widget.argument?['transfer'] == null;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (isStoreMode)
+                              ElevatedButton(
+                                onPressed: () {
+                                  context.read<TransferBloc>().add(ToggleReceiverModeEvent());
+                                },
+                                child: Text(isAddReceiver
+                                    ? '🔍 بحث عن مستلم'
+                                    : '➕ إضافة مستلم'),
+                              ),
+                            const SizedBox(height: 16),
+                            isStoreMode
+                                ? isAddReceiver
+                                ? AddCustomerForm(
+                              countryCodeNotifier: countryReceiverCodeNotifier,
+                              nameController: _newReceiverController,
+                              phoneController: _newReceiverPhoneController,
+                            )
+                                : SearchTextField(
+                              label: 'اسم المستفيد',
+                              textEditingController: _clientNameController,
+                              listType: "customer",
+                              onSuggestionSelected: (suggestion) {
+                                setState(() {
+                                  _receiverId = suggestion.id;
+                                  _clientNameController.text = suggestion.label;
+                                });
+                              },
+                            )
+                                : SearchTextField(
+                              label: 'اسم المستفيد',
+                              textEditingController: _clientNameController,
+                              listType: "customer",
+                              onSuggestionSelected: (suggestion) {
+                                setState(() {
+                                  _receiverId = suggestion.id;
+                                  _clientNameController.text = suggestion.label;
+                                });
+                              },
+                            ),
+                          ],
+                        );
                       },
                     ),
                     const SizedBox(height: 10),
@@ -399,33 +498,61 @@ class _AddTransferViewState extends State<AddTransferView> {
                     ),
                     const SizedBox(height: 20),
                     CustomButton(
-                      isLoading: state is StoreTransferLoading ||
-                          state is UpdateTransferLoading,
-                      text: widget.argument?['transfer'] == null
-                          ? "حفظ التحويل"
-                          : "تحديث التحويل",
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          if (_senderId == null || _receiverId == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('يرجى اختيار المرسل والمستلم')),
-                            );
-                            return;
-                          }
+                        isLoading: state is StoreTransferLoading ||
+                            state is UpdateTransferLoading,
+                        text: widget.argument?['transfer'] == null
+                            ? "حفظ التحويل"
+                            : "تحديث التحويل",
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            // Check sender
+                            final isSenderValid = _senderId != null ||
+                                (_newSenderController.text.isNotEmpty &&
+                                    _newSenderPhoneController.text.isNotEmpty &&
+                                    countrySenderCodeNotifier.value != null);
 
-                          if (widget.argument?['transfer'] == null) {
-                            log('message${widget.argument?['exchange_fee']}');
+                            // Check receiver
+                            final isReceiverValid = _receiverId != null ||
+                                (_newReceiverController.text.isNotEmpty &&
+                                    _newReceiverPhoneController
+                                        .text.isNotEmpty &&
+                                    countryReceiverCodeNotifier.value != null);
+
+                            if (!isSenderValid || !isReceiverValid) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'يرجى اختيار أو إدخال بيانات المرسل والمستلم')),
+                              );
+                              return;
+                            }
+
+                            // Proceed to submit
+                            log('countrySender ${countrySenderCodeNotifier}');
+                            log('reciver ${countryReceiverCodeNotifier}');
                             context.read<TransferBloc>().add(
                                   StoreTransferEvent(
-                                      senderId: _senderId!,
-                                      receiverId: _receiverId!,
-                                      amountSent: _amountController.text,
-                                      transferType: _transactionType,
-                                      cashBoxId: _cashBoxId ?? 1,
-                                      note: _notesController.text,
-                                      tagId: _tagId ?? 1,
-                                      exchangeRateWithFee: _exchangeFee.text),
+                                    senderId: _senderId,
+                                    receiverId: _receiverId,
+                                    amountSent: _amountController.text,
+                                    transferType: _transactionType,
+                                    cashBoxId: _cashBoxId ?? 1,
+                                    note: _notesController.text,
+                                    tagId: _tagId ?? 1,
+                                    exchangeRateWithFee: _exchangeFee.text,
+                                    customerSenderName:
+                                        _newSenderController.text,
+                                    customerSenderPhone:
+                                        _newSenderPhoneController.text,
+                                    customerSenderCountry:
+                                        countrySenderCodeNotifier.value,
+                                    customerReceiverName:
+                                        _newReceiverController.text,
+                                    customerReceiverPhone:
+                                        _newReceiverPhoneController.text,
+                                    customerReceiverCountry:
+                                        countryReceiverCodeNotifier.value,
+                                  ),
                                 );
                           } else {
                             // Update existing transfer
@@ -443,9 +570,7 @@ class _AddTransferViewState extends State<AddTransferView> {
                                   ),
                                 );
                           }
-                        }
-                      },
-                    ),
+                        }),
                   ],
                 ),
               ),

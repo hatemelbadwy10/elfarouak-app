@@ -18,5 +18,5 @@ class RouteNames {
   static const String singleExpenseView ='single_expense_view';
   static const String debtorsView = 'debtors_view';
   static const String cashBoxTransferView = 'cash_box_transfer_view';
-
+  static const String customerTransfersView = 'customer_transfer_view';
 }

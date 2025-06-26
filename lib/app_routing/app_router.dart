@@ -35,6 +35,7 @@ import '../core/services/services_locator.dart';
 import '../features/customers/presentation/view/single_customer_view.dart';
 import '../features/debtor_customers/presentation/controller/debtor_customer_bloc.dart';
 import '../features/debtor_customers/presentation/view/debtor_customer_view.dart';
+import '../features/home_view/presentation/widgets/CustomerTransferBottomSheet.dart';
 import '../features/login_screen/presentation/view/login_screen.dart';
 import '../features/splahs_screen/view/splash_screen.dart';
 
@@ -86,7 +87,7 @@ class AppRouter {
                   ..add(GetTransfersEvent(
                       status: "pending",
                       dateRange: todayRange,
-                    )), // Use today
+                      isHome: true)), // Use today
               ),
             ],
             child: const HomeView(),
@@ -124,7 +125,10 @@ class AppRouter {
         );
       case RouteNames.singleTransferView:
         return _getPageRoute(
-          SingleTransferScreen(argument: _getArguments(settings)!),
+          BlocProvider(
+            create: (context) => TransferBloc(getIt()),
+            child: SingleTransferScreen(argument: _getArguments(settings)!),
+          ),
           settings,
         );
       case RouteNames.usersView:
@@ -173,6 +177,13 @@ class AppRouter {
                 create: (context) =>
                     CashBoxBloc(getIt())..add(GetCashBoxesEvent()),
                 child: const CashBoxView()),
+            settings);
+      case RouteNames.customerTransfersView:
+        return _getPageRoute(
+            BlocProvider(
+              create: (context) => TransferBloc(getIt()),
+              child: const CustomerTransferScreen(),
+            ),
             settings);
       case RouteNames.addCashBoxView:
         return _getPageRoute(

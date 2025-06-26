@@ -31,6 +31,9 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     emit(LoginLoading());
     final result =await _loginRepository.login(LoginParameteres(email: event.email,password: event.password,deviceToken: fcmToken));
     result.fold((l){
+      log('left from login ${l.data}');
+      log('left from login ${l.status}');
+      log('left from login ${l.message}');
       emit(LoginFailure(errMessage: l.message));
 
     }, (r){

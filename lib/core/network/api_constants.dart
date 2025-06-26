@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = "https://library.asr3-languages.com/api/v1/";
+  static const String baseUrl = "https://54m.965.mytemp.website/public/api/v1/";
   static const String login = "auth/login";
   static const String logout = "auth/logout";
   static const String users = "users/list";
@@ -14,6 +14,7 @@ class ApiConstants {
   static const String storeTransfers = 'transfer/store';
   static const String updateTransfer = 'transfer/update/';
   static const String deleteTransfer = 'transfer/delete/';
+  static const String getSingleTransfer ='transfer/show/';
   static const String getCashBox = 'cash-box/index';
   static const String storeCashBox = 'cash-box/store';
   static const String updateCashBox = '/cash-box/update/';

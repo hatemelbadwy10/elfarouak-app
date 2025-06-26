@@ -96,8 +96,8 @@ class Datum extends ExpenseEntity {
             expanseTag: tag?.name ?? '');
 
   final int? id;
-  final String? cashBoxId;
-  final String? tagId;
+  final dynamic? cashBoxId;
+  final dynamic? tagId;
   final String? description;
   final String? amount;
   final dynamic date;

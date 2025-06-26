@@ -14,7 +14,7 @@ class StoreCustomerEvent extends CustomersEvent {
   final String balance;
   final String status;
   final String note;
-  final File profilePic;
+  final File? profilePic;
 
   StoreCustomerEvent({
     required this.name,
@@ -25,7 +25,7 @@ class StoreCustomerEvent extends CustomersEvent {
     required this.balance,
     required this.status,
     required this.note,
-    required this.profilePic
+     this.profilePic
   });
 }
 

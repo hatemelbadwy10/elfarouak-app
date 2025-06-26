@@ -14,23 +14,21 @@ class BalanceCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: Styles.text15.copyWith(color: color)),
-            const SizedBox(height: 8),
-            Text(balance,
-                style: Styles.text18SemiBold.copyWith(color: color)),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Styles.text15.copyWith(color: color)),
+          const SizedBox(height: 8),
+          Text(balance,
+              style: Styles.text18SemiBold.copyWith(color: color)),
+        ],
       ),
     );
   }

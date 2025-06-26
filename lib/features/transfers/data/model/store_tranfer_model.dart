@@ -15,6 +15,12 @@ class StoreTransferModel {
   final String? note;
   final File? profilePicture;
   final int? tagId;
+  final String? customerReceiverPhone;
+  final String? customerReceiverName;
+  final String? customerReceiverCountry;
+  final String? customerSenderPhone;
+  final String? customerSenderName;
+  final String? customerSenderCountry;
 
   StoreTransferModel({
     this.senderId,
@@ -31,10 +37,16 @@ class StoreTransferModel {
     this.note,
     this.profilePicture,
     this.tagId,
+    this.customerReceiverCountry,
+    this.customerReceiverName,
+    this.customerReceiverPhone,
+    this.customerSenderCountry,
+    this.customerSenderName,
+    this.customerSenderPhone
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> data = {
       'sender_id': senderId,
       'receiver_id': receiverId,
       'amount_sent': amountSent,
@@ -45,6 +57,17 @@ class StoreTransferModel {
       'note': note,
       'profile_picture': profilePicture,
       'tag_id': tagId,
+      "customer_sender_name": customerSenderName,
+      "customer_sender_phone": customerSenderPhone,
+      "customer_sender_country": customerSenderCountry,
+      "customer_receiver_name": customerReceiverName,
+      "customer_receiver_phone": customerReceiverPhone,
+      "customer_receiver_country": customerReceiverCountry,
     };
+
+    // Remove all null or empty string values
+    data.removeWhere((key, value) => value == null || (value is String && value.trim().isEmpty));
+
+    return data;
   }
 }

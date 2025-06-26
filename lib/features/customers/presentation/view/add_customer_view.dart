@@ -335,7 +335,7 @@ class _AddCustomerViewState extends State<AddCustomerView> {
                                     balance: balanceController.text,
                                     status: statusCode,
                                     note: noteController.text,
-                                    profilePic: _selectedImage!,
+                                    profilePic: _selectedImage,
                                   ),
                                 );
                               } else {

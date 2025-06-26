@@ -1,22 +1,24 @@
 import 'dart:developer';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:elfarouk_app/app_routing/route_names.dart';
 import 'package:elfarouk_app/core/services/navigation_service.dart';
 import 'package:elfarouk_app/core/services/services_locator.dart';
 import 'package:elfarouk_app/core/utils/app_colors.dart';
+import 'package:elfarouk_app/core/utils/extentios.dart';
 import 'package:elfarouk_app/core/utils/styles.dart';
 import 'package:elfarouk_app/features/home_view/presentation/widgets/add_widget.dart';
 import 'package:elfarouk_app/features/home_view/presentation/widgets/drawer_widget.dart';
+import 'package:elfarouk_app/features/home_view/presentation/widgets/no_data_widget.dart';
 import 'package:elfarouk_app/features/home_view/presentation/widgets/quick_action_widget.dart';
-import 'package:elfarouk_app/features/home_view/presentation/widgets/transfer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/components/custom/custom_button.dart';
+import '../../../../user_info/user_info_bloc.dart';
 import '../../../transfers/presentation/controller/transfer_bloc.dart';
-import '../../../transfers/presentation/widgets/search_text_field.dart';
+import '../../../transfers/presentation/widgets/branch_balance_widget.dart';
 import '../widgets/CustomerTransferBottomSheet.dart';
 import '../widgets/balance_card_widget.dart';
+import '../widgets/partial_update_widget.dart';
 import '../widgets/send_money_sheet.dart';
+import '../widgets/transfer_list_widget.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -28,7 +30,6 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   final ScrollController _scrollController = ScrollController();
 
-  // Store initial data separately to prevent changes during pagination
   double? _initialRate;
   dynamic _initialTotalBalance;
   dynamic _initialTotalTransfers;
@@ -43,14 +44,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   void _loadInitialData() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-
-    final formatter = DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-    final dateRange =
-        '${formatter.format(yesterday)} - ${formatter.format(today)}';
-
+    final dateRange = DateTime.now().yesterdayToTodayRange();
     context.read<TransferBloc>().add(GetTransfersEvent(
         status: "pending", dateRange: dateRange, isHome: true));
   }
@@ -59,23 +53,39 @@ class _HomeViewState extends State<HomeView> {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent * 0.8) {
-        // Load more when user reaches 80% of the scroll
-        final now = DateTime.now();
-        final today = DateTime(now.year, now.month, now.day);
-        final yesterday = today.subtract(const Duration(days: 1));
-
-        final formatter = DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        final dateRange =
-            '${formatter.format(yesterday)} - ${formatter.format(today)}';
+        final dateRange = DateTime.now().yesterdayToTodayRange();
         final state = context.read<TransferBloc>().state;
         if (state is GetTransfersSuccess && !state.hasReachedEnd) {
           context.read<TransferBloc>().add(LoadMoreTransfersEvent(
-                status: "pending",
-                dateRange: dateRange,
-              ));
+            status: "pending",
+            dateRange: dateRange,
+          ));
         }
       }
     });
+  }
+
+  void _refreshTransfers() {
+    log('transfer refresh');
+    _hasLoadedInitialData = false;
+    _initialRate = null;
+    _initialTotalBalance = null;
+    _initialTotalTransfers = null;
+    _initialTotalAmount = null;
+
+    final dateRange = DateTime.now().yesterdayToTodayRange();
+
+    context.read<TransferBloc>().add(
+      GetTransfersEvent(
+        status: "pending",
+        dateRange: dateRange,
+        isHome: true,
+      ),
+    );
+  }
+
+  Future<void> _onRefreshTransfers() async {
+    _refreshTransfers();
   }
 
   @override
@@ -84,122 +94,292 @@ class _HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
-  Widget _buildNoDataWidget(double rate) {
-    return Container(
-      padding: const EdgeInsets.all(32.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.receipt_long_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'لا توجد حوالات',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+  Widget _buildBranchBalanceSection() {
+    return BlocBuilder<TransferBloc, TransferState>(
+      builder: (context, state) {
+        if (state is GetTransfersLoading) {
+          return Container(
+            height: 80,
+            alignment: Alignment.center,
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'يتم التحميل...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'لم يتم العثور على أي حوالات حتى الآن',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
+          );
+        }
+
+        if (state is GetTransfersSuccess && state.showBox) {
+          final totalBalanceText = "${state.totalBalanceEgp ?? '0'}";
+          final cashBoxes = state.cashBoxes;
+          final isAdmin = context.read<UserInfoBloc>().state.user?.role == "admin";
+
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              getIt<NavigationService>().navigateTo(RouteNames.addTransferView,
-                  arguments: {"exchange_fee": rate});
-            },
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('إضافة حوالة جديدة'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet,
+                      color: Colors.blue[600],
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'أرصدة الفروع',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // إجمالي الرصيد - للمشرف فقط
+                if (isAdmin) ...[
+                  BalanceCardWidget(
+                    label: "💰 إجمالي رصيد الفروع",
+                    balance: totalBalanceText,
+                    color: Colors.blue,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // بطاقات الفروع الفردية
+                if (cashBoxes.isNotEmpty) ...[
+                  if (isAdmin) const Divider(height: 1, color: Colors.grey),
+                  if (isAdmin) const SizedBox(height: 12),
+
+                  // Responsive wrap layout using LayoutBuilder
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final cardWidth = (constraints.maxWidth - 24) / 2;
+
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: cashBoxes.map((box) {
+                          return SizedBox(
+                            width: cardWidth,
+                            child: BranchBalanceCard(
+                              name: box.name,
+                              branchBalance: box.balance.toString(),
+                              customerBalance: box.customersBalance.toString(),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ] else ...[
+                  // No branches message
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    alignment: Alignment.center,
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.store_outlined,
+                          size: 32,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'لا توجد فروع',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ),
-        ],
-      ),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 
-  Widget _buildTransfersList(GetTransfersSuccess state) {
-    return Expanded(
-      child: RefreshIndicator(
-        onRefresh: () async {
-          // Reset initial data flags on refresh
-          _hasLoadedInitialData = false;
-          _initialRate = null;
-          _initialTotalBalance = null;
-          _initialTotalTransfers = null;
-          _initialTotalAmount = null;
+  Widget _buildQuickActionsSection(TransferState state) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Make responsive: 2 actions per row on mobile, 4 on tablets
+        final screenWidth = constraints.maxWidth;
+        final isTablet = screenWidth > 600;
 
-          final now = DateTime.now();
-          final today = DateTime(now.year, now.month, now.day);
-          final yesterday = today.subtract(const Duration(days: 1));
-
-          final formatter = DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-          final dateRange =
-              '${formatter.format(yesterday)} - ${formatter.format(today)}';
-          context.read<TransferBloc>().add(GetTransfersEvent(
-              status: "pending", dateRange: dateRange, isHome: true));
-        },
-        child: ListView.builder(
-          controller: _scrollController,
-          itemCount: state.list.length + (state.isLoadingMore ? 1 : 0),
-          itemBuilder: (context, index) {
-            // Show loading indicator at the end when loading more
-            if (index == state.list.length) {
-              return Container(
-                padding: const EdgeInsets.all(16.0),
-                alignment: Alignment.center,
-                child: const CircularProgressIndicator(),
-              );
-            }
-
-            return TransferCard(
-              exchangeFee: _initialRate ?? state.rate,
-              isSender: true,
-              isHome: true,
-              transfer: state.list[index],
-              onPress: () {
-                log('transfer done');
-                _hasLoadedInitialData = false;
-                _initialRate = null;
-                _initialTotalBalance = null;
-                _initialTotalTransfers = null;
-                _initialTotalAmount = null;
-
-                final now = DateTime.now();
-                final today = DateTime(now.year, now.month, now.day);
-                final yesterday = today.subtract(const Duration(days: 1));
-                final formatter = DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-                final dateRange =
-                    '${formatter.format(yesterday)} - ${formatter.format(today)}';
-
-                context.read<TransferBloc>().add(
-                      GetTransfersEvent(
-                        status: "pending",
-                        dateRange: dateRange,
+        if (isTablet) {
+          // Single row for tablets
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: QuickActionWidget(
+                  icon: Icons.compare_arrows,
+                  label: "حوالة",
+                  color: AppColors.primary,
+                  onPress: () {
+                    getIt<NavigationService>()
+                        .navigateTo(RouteNames.addTransferView, arguments: {
+                      "exchange_fee": state is GetTransfersSuccess ? state.rate : "9.14"
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: QuickActionWidget(
+                  icon: Icons.account_balance_wallet,
+                  label: "سحب أو إيداع",
+                  color: Colors.green,
+                  onPress: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const PartialUpdateDialog(),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: QuickActionWidget(
+                  icon: Icons.send_rounded,
+                  label: "إرسال أموال",
+                  color: Colors.orange,
+                  onPress: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      builder: (_) => BlocProvider(
+                        create: (context) => TransferBloc(getIt()),
+                        child: const SendMoneySheet(),
                       ),
                     );
-              },
-            );
-          },
-        ),
-      ),
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: QuickActionWidget(
+                  icon: Icons.person,
+                  label: "تحويل بين العملاء",
+                  color: AppColors.primary,
+                  onPress: () {
+                   getIt<NavigationService>().navigateTo(RouteNames.customerTransfersView);
+                  },
+                ),
+              ),
+            ],
+          );
+        } else {
+          // Two rows for mobile
+          return Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: QuickActionWidget(
+                      icon: Icons.compare_arrows,
+                      label: "حوالة",
+                      color: AppColors.primary,
+                      onPress: () {
+                        getIt<NavigationService>()
+                            .navigateTo(RouteNames.addTransferView, arguments: {
+                          "exchange_fee": state is GetTransfersSuccess ? state.rate : "9.14"
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: QuickActionWidget(
+                      icon: Icons.account_balance_wallet,
+                      label: "سحب أو إيداع",
+                      color: Colors.green,
+                      onPress: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => const PartialUpdateDialog(),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: QuickActionWidget(
+                      icon: Icons.send_rounded,
+                      label: "إرسال أموال",
+                      color: Colors.orange,
+                      onPress: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          builder: (_) => BlocProvider(
+                            create: (context) => TransferBloc(getIt()),
+                            child: const SendMoneySheet(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: QuickActionWidget(
+                      icon: Icons.person,
+                      label: "تحويل بين العملاء",
+                      color: AppColors.primary,
+                      onPress: () {
+                        getIt<NavigationService>().navigateTo(RouteNames.customerTransfersView);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 
@@ -245,8 +425,8 @@ class _HomeViewState extends State<HomeView> {
                       _hasLoadedInitialData && _initialRate != null
                           ? '$_initialRate جنيه مصري'
                           : state is GetTransfersSuccess
-                              ? '${state.rate} جنيه مصري'
-                              : 'جاري التحديث...',
+                          ? '${state.rate} جنيه مصري'
+                          : 'جاري التحديث...',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -264,340 +444,82 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
           drawer: Drawer(
-              child: DrawerWidget(
-            exchangeFee: _hasLoadedInitialData && _initialRate != null
-                ? _initialRate!
-                : state is GetTransfersSuccess
-                    ? state.rate
-                    : 0.0,
-          )),
-          body: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    BlocBuilder<TransferBloc, TransferState>(
-                      builder: (context, state) {
-                        String balanceText;
-                        if (_hasLoadedInitialData &&
-                            _initialTotalBalance != null) {
-                          balanceText = "$_initialTotalBalance";
-                        } else if (state is GetTransfersLoading) {
-                          balanceText = 'يتم التحميل';
-                        } else if (state is GetTransfersSuccess) {
-                          balanceText = "${state.totalBalanceEgp}";
-                        } else {
-                          balanceText = 'فشل';
-                        }
+            child: DrawerWidget(
+              exchangeFee: _hasLoadedInitialData && _initialRate != null
+                  ? _initialRate!
+                  : state is GetTransfersSuccess
+                  ? state.rate
+                  : 0.0,
+            ),
+          ),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Branch Balance Section - Made responsive
+                  _buildBranchBalanceSection(),
 
-                        return state is GetTransfersSuccess
-                            ? state.showBox
-                                ? BalanceCardWidget(
-                                    label: "  إجمالي رصيد الفروع ",
-                                    balance: balanceText,
-                                    color: Colors.blue,
-                                  )
-                                : const SizedBox()
-                            : const SizedBox();
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    QuickActionWidget(
-                      icon: Icons.compare_arrows,
-                      label: "حوالة",
-                      color: AppColors.primary,
-                      onPress: () {
-                        getIt<NavigationService>()
-                            .navigateTo(RouteNames.addTransferView, arguments: {
-                          "exchange_fee":
-                              state is GetTransfersSuccess ? state.rate : "9.14"
-                        });
-                      },
-                    ),
-                    QuickActionWidget(
-                      icon: Icons.account_balance_wallet,
-                      label: "سحب أو إيداع",
-                      color: Colors.green,
-                      onPress: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            String? selectedAction;
-                            final TextEditingController balanceController =
-                                TextEditingController();
-                            final TextEditingController senderIdController =
-                                TextEditingController();
-                            int senderId = 1;
-                            return BlocProvider(
-                              create: (context) => TransferBloc(getIt()),
-                              child: StatefulBuilder(
-                                builder: (context, setState) {
-                                  bool isLoading = false;
+                  const SizedBox(height: 20),
 
-                                  String? mapArabicActionToApiValue(
-                                      String? value) {
-                                    switch (value) {
-                                      case 'إضافة':
-                                        return 'add';
-                                      case 'خصم':
-                                        return 'subtract';
-                                      case 'تعيين':
-                                        return 'set';
-                                      default:
-                                        return null;
-                                    }
-                                  }
+                  // Quick Actions Section - Made responsive
+                  _buildQuickActionsSection(state),
 
-                                  return BlocListener<TransferBloc,
-                                      TransferState>(
-                                    listener: (context, state) {
-                                      if (state
-                                          is PartialUpdateCustomerLoading) {
-                                        setState(() => isLoading = true);
-                                      } else {
-                                        setState(() => isLoading = false);
-                                      }
+                  const SizedBox(height: 24),
 
-                                      if (state
-                                          is PartialUpdateCustomerSuccess) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                              content: Text(state.message)),
-                                        );
-                                        Navigator.of(context)
-                                            .pop(); // Close dialog on success
-                                      } else if (state
-                                          is PartialUpdateCustomerFailure) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                              content: Text(state.errMessage)),
-                                        );
-                                        // Stay in dialog on failure
-                                      }
-                                    },
-                                    child: AlertDialog(
-                                      title: const Text('إضافة عملية'),
-                                      content: SingleChildScrollView(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            SearchTextField(
-                                              label: 'المرسل',
-                                              textEditingController:
-                                                  senderIdController,
-                                              listType: "customer",
-                                              onSuggestionSelected:
-                                                  (suggestion) {
-                                                senderId = suggestion.id;
-                                                log("senderId${suggestion.id}");
-                                                log("senderId$senderId");
-                                                senderIdController.text =
-                                                    suggestion.label;
-                                              },
-                                            ),
-                                            const SizedBox(height: 10),
-                                            DropdownButtonFormField<String>(
-                                              decoration: const InputDecoration(
-                                                  labelText: 'نوع العملية'),
-                                              value: selectedAction,
-                                              items: const [
-                                                DropdownMenuItem(
-                                                    value: 'إضافة',
-                                                    child: Text('إضافة')),
-                                                DropdownMenuItem(
-                                                    value: 'خصم',
-                                                    child: Text('خصم')),
-                                                DropdownMenuItem(
-                                                    value: 'تعيين',
-                                                    child: Text('تعيين')),
-                                              ],
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  selectedAction = value;
-                                                });
-                                              },
-                                            ),
-                                            const SizedBox(height: 10),
-                                            TextFormField(
-                                              controller: balanceController,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              decoration: const InputDecoration(
-                                                  labelText: 'الرصيد'),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      actions: [
-                                        CustomButton(
-                                          isLoading: isLoading,
-                                          text: 'تنفيذ',
-                                          onPressed: () {
-                                            final balance = double.tryParse(
-                                                balanceController.text);
-
-                                            if (selectedAction == null ||
-                                                balance == null) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                      'يرجى إدخال كل البيانات: المرسل، نوع العملية، الرصيد'),
-                                                ),
-                                              );
-                                              return;
-                                            }
-
-                                            final apiTransferType =
-                                                mapArabicActionToApiValue(
-                                                    selectedAction);
-
-                                            if (apiTransferType == null) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                      'نوع العملية غير صحيح'),
-                                                ),
-                                              );
-                                              return;
-                                            }
-                                            log('senderId$senderId');
-                                            context.read<TransferBloc>().add(
-                                                  PartialUpdateCustomerEvent(
-                                                    customerId: senderId,
-                                                    balance: balance,
-                                                    transferType:
-                                                        apiTransferType,
-                                                  ),
-                                                );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    QuickActionWidget(
-                      icon: Icons.send_rounded,
-                      label: "إرسال أموال",
-                      color: Colors.orange,
-                      onPress: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(20)),
+                  // Transfers Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'آخر الحوالات (${_hasLoadedInitialData && _initialTotalTransfers != null ? _initialTotalTransfers : state is GetTransfersSuccess ? state.totalTransfers : 0})',
+                            style: Styles.text18SemiBold,
                           ),
-                          builder: (_) => BlocProvider(
-                            create: (context) => TransferBloc(getIt()),
-                            child: const SendMoneySheet(),
+                          const SizedBox(height: 4),
+                          Text(
+                            'الإجمالي: ${_hasLoadedInitialData && _initialTotalAmount != null ? _initialTotalAmount : state is GetTransfersSuccess ? state.totalAmountReceived : 0} جنيه',
+                            style: Styles.text13.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold),
                           ),
-                        );
-                      },
-                    ),
-                    QuickActionWidget(
-                      icon: Icons.person,
-                      label: "تحويل بين العملاء",
-                      color: AppColors.primary,
-                      onPress: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(20)),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              _hasLoadedInitialData = false;
+                              _initialRate = null;
+                              _initialTotalBalance = null;
+                              _initialTotalTransfers = null;
+                              _initialTotalAmount = null;
+                              final dateRange = DateTime.now().yesterdayToTodayRange();
+                              context.read<TransferBloc>().add(
+                                  GetTransfersEvent(
+                                      status: "pending",
+                                      dateRange: dateRange,
+                                      isHome: true));
+                            },
+                            icon: const Icon(Icons.refresh),
                           ),
-                          builder: (context) => BlocProvider(
-                            create: (context) => TransferBloc(getIt()),
-                            child: const CustomerTransferBottomSheet(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      children: [
-                        Text(
-                          'آخر الحوالات (${_hasLoadedInitialData && _initialTotalTransfers != null ? _initialTotalTransfers : state is GetTransfersSuccess ? state.totalTransfers : 0})',
-                          style: Styles.text18SemiBold,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'الإجمالي: ${_hasLoadedInitialData && _initialTotalAmount != null ? _initialTotalAmount : state is GetTransfersSuccess ? state.totalAmountReceived : 0} جنيه',
-                          style: Styles.text13.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: GestureDetector(
-                        onTap: () {
-                          final rate =
-                              _hasLoadedInitialData && _initialRate != null
+                          GestureDetector(
+                            onTap: () {
+                              final rate = _hasLoadedInitialData && _initialRate != null
                                   ? _initialRate!
                                   : state is GetTransfersSuccess
-                                      ? state.rate
-                                      : 0.0;
+                                  ? state.rate
+                                  : 0.0;
 
-                          getIt<NavigationService>()
-                              .navigateTo(RouteNames.transfersView, arguments: {
-                            "exchange_fee": rate,
-                          });
-                        },
-                        child: Row(
-                          children: [
-                            IconButton(
-                                onPressed: () {
-                                  _hasLoadedInitialData = false;
-                                  _initialRate = null;
-                                  _initialTotalBalance = null;
-                                  _initialTotalTransfers = null;
-                                  _initialTotalAmount = null;
-
-                                  final now = DateTime.now();
-                                  final today =
-                                      DateTime(now.year, now.month, now.day);
-                                  final yesterday =
-                                      today.subtract(const Duration(days: 1));
-
-                                  final formatter =
-                                      DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-                                  final dateRange =
-                                      '${formatter.format(yesterday)} - ${formatter.format(today)}';
-                                  context
-                                      .read<TransferBloc>()
-                                      .add(GetTransfersEvent(
-                                        status: "pending",
-                                        dateRange: dateRange,
-                                      ));
-                                },
-                                icon: const Icon(Icons.refresh)),
-                            Text(
+                              getIt<NavigationService>()
+                                  .navigateTo(RouteNames.transfersView, arguments: {
+                                "exchange_fee": rate,
+                              });
+                            },
+                            child: Text(
                               'عرض الكل',
                               style: Styles.sectionTitle.copyWith(
                                 decoration: TextDecoration.underline,
@@ -605,97 +527,99 @@ class _HomeViewState extends State<HomeView> {
                                 decorationThickness: 1.5,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Transfers section with states handling
-                if (state is GetTransfersLoading)
-                  const Expanded(
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (state is GetTransfersSuccess)
-                  state.list.isEmpty
-                      ? Expanded(child: _buildNoDataWidget(state.rate))
-                      : _buildTransfersList(state)
-                else if (state is GetTransfersFailure)
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Colors.red[300],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'حدث خطأ',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.red[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            state.errMessage,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              // Reset initial data flags on retry
-                              _hasLoadedInitialData = false;
-                              _initialRate = null;
-                              _initialTotalBalance = null;
-                              _initialTotalTransfers = null;
-                              _initialTotalAmount = null;
-
-                              final now = DateTime.now();
-                              final today =
-                                  DateTime(now.year, now.month, now.day);
-                              final yesterday =
-                                  today.subtract(const Duration(days: 1));
-
-                              final formatter =
-                                  DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-                              final dateRange =
-                                  '${formatter.format(yesterday)} - ${formatter.format(today)}';
-                              context
-                                  .read<TransferBloc>()
-                                  .add(GetTransfersEvent(
-                                    status: "pending",
-                                    dateRange: dateRange,
-                                    isHome: true,
-                                  ));
-                            },
-                            icon: const Icon(Icons.refresh, size: 18),
-                            label: const Text('إعادة المحاولة'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                            ),
                           ),
                         ],
                       ),
-                    ),
-                  )
-                else
-                  const SizedBox(),
-              ],
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Transfers List - Made with fixed height to prevent overflow
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.4, // 40% of screen height
+                    child: _buildTransfersContent(state),
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
     );
+  }
+
+  Widget _buildTransfersContent(TransferState state) {
+    if (state is GetTransfersLoading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (state is GetTransfersSuccess) {
+      if (state.list.isEmpty) {
+        return NoDataWidget(rate: state.rate);
+      } else {
+        return TransferListWidget(
+          transfers: state.list,
+          isLoadingMore: state.isLoadingMore,
+          rate: _initialRate ?? state.rate,
+          scrollController: _scrollController,
+          onRefresh: _onRefreshTransfers,
+          onCardPress: _refreshTransfers,
+        );
+      }
+    } else if (state is GetTransfersFailure) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'حدث خطأ',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.red[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.errMessage,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                _hasLoadedInitialData = false;
+                _initialRate = null;
+                _initialTotalBalance = null;
+                _initialTotalTransfers = null;
+                _initialTotalAmount = null;
+
+                final dateRange = DateTime.now().yesterdayToTodayRange();
+                context.read<TransferBloc>().add(GetTransfersEvent(
+                  status: "pending",
+                  dateRange: dateRange,
+                  isHome: true,
+                ));
+              },
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('إعادة المحاولة'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return const SizedBox();
   }
 }
