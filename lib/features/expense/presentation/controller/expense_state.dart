@@ -1,62 +1,50 @@
-part of 'expense_bloc.dart';
+import '../../../../core/utils/enums.dart';
+import '../../domain/entity/expense_entity.dart';
 
-@immutable
-sealed class ExpenseState {}
-
-final class ExpenseInitial extends ExpenseState {}
-
-final class ExpenseLoading extends ExpenseState {}
-
-final class ExpenseSuccess extends ExpenseState {
+class ExpenseState {
+  final RequestStatus requestStatus;
   final List<ExpenseEntity> list;
-
-  ExpenseSuccess({required this.list});
-}
-
-final class ExpenseFailure extends ExpenseState {
   final String errMessage;
+  final String storeExpenseSuccess;
+  final String storeExpenseFailure;
+  final String updateExpenseSuccess;
+  final String updateExpenseFailure;
+  final String deleteExpenseSuccess;
+  final String deleteExpenseFailure;
 
-  ExpenseFailure({required this.errMessage});
-}
+  const ExpenseState({
+    this.requestStatus = RequestStatus.initial,
+    this.list = const [],
+    this.errMessage = '',
+    this.storeExpenseSuccess = '',
+    this.storeExpenseFailure = '',
+    this.updateExpenseSuccess = '',
+    this.updateExpenseFailure = '',
+    this.deleteExpenseSuccess = '',
+    this.deleteExpenseFailure = '',
+  });
 
-final class StoreExpenseLoading extends ExpenseState {}
-
-final class StoreExpenseSuccess extends ExpenseState {
-  final String message;
-
-  StoreExpenseSuccess({required this.message});
-}
-
-final class StoreExpenseFailure extends ExpenseState {
-  final String errMessage;
-
-  StoreExpenseFailure({required this.errMessage});
-}
-
-final class UpdateExpenseLoading extends ExpenseState {}
-
-final class UpdateExpenseSuccess extends ExpenseState {
-  final String message;
-
-  UpdateExpenseSuccess({required this.message});
-}
-
-final class UpdateExpenseFailure extends ExpenseState {
-  final String errMessage;
-
-  UpdateExpenseFailure({required this.errMessage});
-}
-
-final class DeleteExpenseLoading extends ExpenseState {}
-
-final class DeleteExpenseSuccess extends ExpenseState {
-  final String message;
-
-  DeleteExpenseSuccess({required this.message});
-}
-
-final class DeleteExpenseFailure extends ExpenseState {
-  final String errMessage;
-
-  DeleteExpenseFailure({required this.errMessage});
+  ExpenseState copyWith({
+    RequestStatus? requestStatus,
+    List<ExpenseEntity>? list,
+    String? errMessage,
+    String? storeExpenseSuccess,
+    String? storeExpenseFailure,
+    String? updateExpenseSuccess,
+    String? updateExpenseFailure,
+    String? deleteExpenseSuccess,
+    String? deleteExpenseFailure,
+  }) {
+    return ExpenseState(
+      requestStatus: requestStatus ?? this.requestStatus,
+      list: list ?? this.list,
+      errMessage: errMessage ?? this.errMessage,
+      storeExpenseSuccess: storeExpenseSuccess ?? this.storeExpenseSuccess,
+      storeExpenseFailure: storeExpenseFailure ?? this.storeExpenseFailure,
+      updateExpenseSuccess: updateExpenseSuccess ?? this.updateExpenseSuccess,
+      updateExpenseFailure: updateExpenseFailure ?? this.updateExpenseFailure,
+      deleteExpenseSuccess: deleteExpenseSuccess ?? this.deleteExpenseSuccess,
+      deleteExpenseFailure: deleteExpenseFailure ?? this.deleteExpenseFailure,
+    );
+  }
 }

@@ -1,20 +1,19 @@
 import 'package:bloc/bloc.dart';
+import 'package:elfarouk_app/core/utils/enums.dart';
 import 'package:elfarouk_app/features/expense/data/models/store_expense_mode.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:meta/meta.dart';
 import '../../../../app_routing/route_names.dart';
 import '../../../../core/services/navigation_service.dart';
 import '../../../../core/services/services_locator.dart';
-import '../../domain/entity/expense_entity.dart';
 import '../../domain/repo/expense_repo.dart';
+import 'expense_state.dart';
 
 part 'expense_event.dart';
-part 'expense_state.dart';
 
 class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   final ExpenseRepo _expenseRepo;
 
-  ExpenseBloc(this._expenseRepo) : super(ExpenseInitial()) {
+  ExpenseBloc(this._expenseRepo) : super(const ExpenseState()) {
     on<GetExpensesEvent>(_getExpenses);
     on<StoreExpenseEvent>(_storeExpense);
     on<UpdateExpenseEvent>(_updateExpense);
@@ -22,16 +21,24 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   }
 
   Future<void> _getExpenses(GetExpensesEvent event, Emitter<ExpenseState> emit) async {
-    emit(ExpenseLoading());
+    emit(state.copyWith(requestStatus: RequestStatus.loading));
+
     final result = await _expenseRepo.getExpense();
+
     result.fold(
-          (l) => emit(ExpenseFailure(errMessage: l.message)),
-          (r) => emit(ExpenseSuccess(list: r)),
+          (l) => emit(state.copyWith(
+        requestStatus: RequestStatus.failure,
+        errMessage: l.message,
+      )),
+          (r) => emit(state.copyWith(
+        requestStatus: RequestStatus.success,
+        list: r,
+      )),
     );
   }
 
   Future<void> _storeExpense(StoreExpenseEvent event, Emitter<ExpenseState> emit) async {
-    emit(StoreExpenseLoading());
+    emit(state.copyWith(requestStatus: RequestStatus.loading));
 
     final result = await _expenseRepo.storeExpense(StoreExpenseModel(
       branchId: event.branchId,
@@ -42,11 +49,17 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
 
     result.fold(
           (l) {
-        emit(StoreExpenseFailure(errMessage: l.message));
+        emit(state.copyWith(
+          requestStatus: RequestStatus.failure,
+          storeExpenseFailure: l.message,
+        ));
         Fluttertoast.showToast(msg: l.message);
       },
           (r) {
-        emit(StoreExpenseSuccess(message: r));
+        emit(state.copyWith(
+          requestStatus: RequestStatus.success,
+          storeExpenseSuccess: r,
+        ));
         Fluttertoast.showToast(msg: r);
         getIt<NavigationService>().navigateToAndRemoveUntil(
           RouteNames.expenseView,
@@ -57,7 +70,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   }
 
   Future<void> _updateExpense(UpdateExpenseEvent event, Emitter<ExpenseState> emit) async {
-    emit(UpdateExpenseLoading());
+    emit(state.copyWith(requestStatus: RequestStatus.loading));
 
     final result = await _expenseRepo.updateExpense(
       StoreExpenseModel(
@@ -71,11 +84,17 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
 
     result.fold(
           (l) {
-        emit(UpdateExpenseFailure(errMessage: l.message));
+        emit(state.copyWith(
+          requestStatus: RequestStatus.failure,
+          updateExpenseFailure: l.message,
+        ));
         Fluttertoast.showToast(msg: l.message);
       },
           (r) {
-        emit(UpdateExpenseSuccess(message: r));
+        emit(state.copyWith(
+          requestStatus: RequestStatus.success,
+          updateExpenseSuccess: r,
+        ));
         Fluttertoast.showToast(msg: r);
         getIt<NavigationService>().navigateToAndRemoveUntil(
           RouteNames.expenseView,
@@ -86,17 +105,23 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   }
 
   Future<void> _deleteExpense(DeleteExpenseEvent event, Emitter<ExpenseState> emit) async {
-    emit(DeleteExpenseLoading());
+    emit(state.copyWith(requestStatus: RequestStatus.loading));
 
     final result = await _expenseRepo.deleteExpense(event.id);
 
     result.fold(
           (l) {
-        emit(DeleteExpenseFailure(errMessage: l.message));
+        emit(state.copyWith(
+          requestStatus: RequestStatus.failure,
+          deleteExpenseFailure: l.message,
+        ));
         Fluttertoast.showToast(msg: l.message);
       },
           (r) {
-        emit(DeleteExpenseSuccess(message: r));
+        emit(state.copyWith(
+          requestStatus: RequestStatus.success,
+          deleteExpenseSuccess: r,
+        ));
         Fluttertoast.showToast(msg: r);
         getIt<NavigationService>().navigateToAndRemoveUntil(
           RouteNames.expenseView,

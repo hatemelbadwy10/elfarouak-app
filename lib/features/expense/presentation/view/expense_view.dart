@@ -1,3 +1,4 @@
+import 'package:elfarouk_app/core/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -5,6 +6,7 @@ import '../../../../app_routing/route_names.dart';
 import '../../../../core/services/navigation_service.dart';
 import '../../../../core/services/services_locator.dart';
 import '../controller/expense_bloc.dart';
+import '../controller/expense_state.dart';
 import '../widgets/expense_card.dart';
 
 class ExpenseView extends StatelessWidget {
@@ -16,9 +18,9 @@ class ExpenseView extends StatelessWidget {
       appBar: AppBar(title: const Text('المصروفات')),
       body: BlocBuilder<ExpenseBloc, ExpenseState>(
         builder: (context, state) {
-          if (state is ExpenseLoading) {
+          if (state.requestStatus == RequestStatus.loading) {
             return const Center(child: CircularProgressIndicator());
-          } else if (state is ExpenseSuccess) {
+          } else if (state.requestStatus == RequestStatus.success) {
             return ListView.builder(
               itemCount: state.list.length,
               itemBuilder: (context, index) {
@@ -39,7 +41,7 @@ class ExpenseView extends StatelessWidget {
                 );
               },
             );
-          } else if (state is ExpenseFailure) {
+          } else if (state.requestStatus == RequestStatus.failure) {
             return Center(child: Text('حدث خطأ: ${state.errMessage}'));
           } else {
             return const SizedBox();
