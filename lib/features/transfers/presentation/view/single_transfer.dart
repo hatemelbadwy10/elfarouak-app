@@ -2,11 +2,7 @@ import 'package:elfarouk_app/features/transfers/presentation/controller/transfer
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../../../app_routing/route_names.dart';
-import '../../../../core/services/navigation_service.dart';
-import '../../../../core/services/services_locator.dart';
 import '../../../../core/utils/styles.dart';
-import '../../../../core/components/custom/custom_button.dart';
 import '../../domain/entity/transfer_entity.dart';
 
 class SingleTransferScreen extends StatefulWidget {
@@ -63,7 +59,7 @@ class _SingleTransferScreenState extends State<SingleTransferScreen> {
                       _buildItem(
                           "اسم المندوب" "👤", transfer.sellerSenderName ?? "_"),
                       _buildItem("اسم العميل المستلم" "👤",
-                          transfer.sellerSenderName ?? "_"),
+                          transfer.sellerReceiverName ?? "_"),
                       _buildItem(
                           '📦 الكمية المرسلة:', transfer.amountSent ?? '—'),
                       _buildItem('💸 الكمية المستلمة:',
@@ -71,7 +67,7 @@ class _SingleTransferScreenState extends State<SingleTransferScreen> {
                       _buildItem(
                           '🎯 سعر الصرف:', transfer.exchangeRateWithFee ?? '—'),
                       _buildItem('🎯الفرع:',
-                          transfer.cashBoxId == "1" ? "ليبيا" : "مصر" ?? '—'),
+                          transfer.cashBoxName??'—'),
                       _buildItem(
                           '🏢 اسم المستلم:', transfer.receiverName ?? '—'),
                       _buildItem(
@@ -123,20 +119,20 @@ class _SingleTransferScreenState extends State<SingleTransferScreen> {
                         ),
                       ],
                       const SizedBox(height: 20),
-                      CustomButton(
-                        text: 'تعديل',
-                        onPressed: () {
-                          // Navigate to AddTransferView with transfer data
-                          getIt<NavigationService>().navigateTo(
-                            RouteNames.addTransferView,
-                            arguments: {
-                              'transfer': transfer,
-                              'id': transfer.id,
-                              "exchange_fee": widget.argument['exchange_fee']
-                            },
-                          );
-                        },
-                      ),
+                      // CustomButton(
+                      //   text: 'تعديل',
+                      //   onPressed: () {
+                      //     // Navigate to AddTransferView with transfer data
+                      //     getIt<NavigationService>().navigateTo(
+                      //       RouteNames.addTransferView,
+                      //       arguments: {
+                      //         'transfer': transfer,
+                      //         'id': transfer.id,
+                      //         "exchange_fee": widget.argument['exchange_fee']
+                      //       },
+                      //     );
+                      //   },
+                      // ),
                     ],
                   ),
                 ),

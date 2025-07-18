@@ -1,8 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import '../../../transfers/presentation/controller/transfer_bloc.dart';
+
 class SendMoneySheet extends StatefulWidget {
   const SendMoneySheet({super.key});
 
@@ -13,6 +16,7 @@ class SendMoneySheet extends StatefulWidget {
 class _SendMoneySheetState extends State<SendMoneySheet> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _exchangeFee = TextEditingController();
 
   int? toCashBoxId;
   int? fromCashBoxId;
@@ -73,6 +77,12 @@ class _SendMoneySheetState extends State<SendMoneySheet> {
             ),
             const SizedBox(height: 12),
             TextFormField(
+              controller: _exchangeFee,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'سعر الصرف'),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
               controller: _noteController,
               decoration: const InputDecoration(labelText: 'ملاحظة'),
             ),
@@ -83,21 +93,23 @@ class _SendMoneySheetState extends State<SendMoneySheet> {
                   Fluttertoast.showToast(msg: "يرجى اختيار الفرع");
                   return;
                 }
+                final double? exchange = double.tryParse(_exchangeFee.text);
 
-                final double? amount = double.tryParse(_amountController.text);
+                double? amount = double.tryParse(_amountController.text);
                 if (amount == null || amount <= 0) {
                   Fluttertoast.showToast(msg: "يرجى إدخال مبلغ صالح");
                   return;
                 }
-
+                  log('amount $amount');
                 context.read<TransferBloc>().add(
-                  SendMoneyEvent(
-                    fromCashBoxId: fromCashBoxId!,
-                    toCashBoxId: toCashBoxId!,
-                    amount: amount,
-                    note: _noteController.text,
-                  ),
-                );
+                      SendMoneyEvent(
+                        fromCashBoxId: fromCashBoxId!,
+                        toCashBoxId: toCashBoxId!,
+                        amount: amount,
+                        note: _noteController.text,
+                        exchangeFee: exchange
+                      ),
+                    );
               },
               child: const Text('إرسال'),
             ),

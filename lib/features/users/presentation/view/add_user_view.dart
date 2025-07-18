@@ -29,13 +29,12 @@ class _AddUserViewState extends State<AddUserView> {
   final roleController = TextEditingController();
   final countryController = TextEditingController();
 
-  final roles = ['مدير', 'مشرف', 'موظف'];
+  final roles = ['مدير', 'موظف'];
   final countries = ['مصر', 'ليبيا'];
 
   // Map Arabic role names to backend role keys
   final Map<String, String> roleMap = {
     'مدير': 'admin',
-    'مشرف': 'manger',
     'موظف': 'user',
   };
 

@@ -3,7 +3,7 @@ import 'package:elfarouk_app/core/utils/app_colors.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Color? color;
   final double? width;
   final double height;
@@ -12,7 +12,7 @@ class CustomButton extends StatelessWidget {
   const CustomButton({
     super.key,
     required this.text,
-    required this.onPressed,
+     this.onPressed,
     this.color,
     this.width,
     this.height = 50.0,

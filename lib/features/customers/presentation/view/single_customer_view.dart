@@ -29,20 +29,29 @@ class SingleCustomerScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage: NetworkImage(customer.customerProfilePicture),
+                  backgroundImage:
+                      NetworkImage(customer.customerProfilePicture),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   customer.customerName,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 _infoRow('📱 الهاتف:', customer.customerPhone),
                 _infoRow('🏠 العنوان:', customer.customerAddress),
-                _infoRow('🌍 الدولة:', customer.customerCountry),
-                _infoRow('👤 النوع:', customer.customerGender),
-                _infoRow('📝 الملاحظات:', customer.customerNote.isNotEmpty ? customer.customerNote : 'لا يوجد'),
-                _infoRow('💰 الرصيد:', 'EGP ${customer.customerBalance}'),
+                customer.customerCountry != null
+                    ? _infoRow('🌍 الدولة:', customer.customerCountry!)
+                    : const SizedBox(),
+
+                // _infoRow('👤 النوع:', customer.customerGender),
+                _infoRow(
+                    '📝 الملاحظات:',
+                    customer.customerNote.isNotEmpty
+                        ? customer.customerNote
+                        : 'لا يوجد'),
+                _infoRow('💰 الرصيد:', ' ${customer.customerBalance}'),
               ],
             ),
           ),
@@ -58,7 +67,8 @@ class SingleCustomerScreen extends StatelessWidget {
         children: [
           Expanded(
             flex: 2,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+            child: Text(label,
+                style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
           Expanded(
             flex: 3,

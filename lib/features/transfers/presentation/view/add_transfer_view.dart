@@ -79,9 +79,11 @@ class _AddTransferViewState extends State<AddTransferView> {
             : int.parse(transfer.transferSenderId ?? "1");
         log('_sendeId $_senderId');
         log('_sendeId ${transfer.transferSenderId}');
-        _receiverId = int.tryParse(transfer.receiverId);
-        _tagId = int.tryParse(transfer.tagId ?? "1");
-        _cashBoxId = int.parse(transfer.cashBoxId);
+        log('reciverId ${transfer.receiverId}');
+
+        _receiverId = transfer.receiverId is int? transfer.receiverId: int.tryParse(transfer.receiverId);
+        _tagId = transfer.tagId is int? transfer.tagId: int.tryParse(transfer.tagId ?? "1");
+        _cashBoxId =transfer.cashBoxId is int? transfer.cashBoxId:  int.parse(transfer.cashBoxId);
 
         // Set display names for sender and receiver
         _senderIdController.text = transfer.senderName ?? '';
@@ -238,7 +240,8 @@ class _AddTransferViewState extends State<AddTransferView> {
                         }
 
                         // Check if we are in store or update mode
-                        final isStoreMode = widget.argument?['transfer'] == null;
+                        final isStoreMode =
+                            widget.argument?['transfer'] == null;
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,42 +249,51 @@ class _AddTransferViewState extends State<AddTransferView> {
                             if (isStoreMode)
                               ElevatedButton(
                                 onPressed: () {
-                                  context.read<TransferBloc>().add(ToggleSenderModeEvent());
+                                  context
+                                      .read<TransferBloc>()
+                                      .add(ToggleSenderModeEvent());
                                 },
                                 child: Text(
-                                  isAddSender ? '🔍 بحث عن مرسل' : '➕ إضافة مرسل',
+                                  isAddSender
+                                      ? '🔍 بحث عن مرسل'
+                                      : '➕ إضافة مرسل',
                                 ),
                               ),
                             const SizedBox(height: 16),
                             isStoreMode
                                 ? isAddSender
-                                ? AddCustomerForm(
-                              countryCodeNotifier: countrySenderCodeNotifier,
-                              nameController: _newSenderController,
-                              phoneController: _newSenderPhoneController,
-                            )
+                                    ? AddCustomerForm(
+                                        countryCodeNotifier:
+                                            countrySenderCodeNotifier,
+                                        nameController: _newSenderController,
+                                        phoneController:
+                                            _newSenderPhoneController,
+                                      )
+                                    : SearchTextField(
+                                        label: 'المرسل',
+                                        textEditingController:
+                                            _senderIdController,
+                                        listType: "customer",
+                                        onSuggestionSelected: (suggestion) {
+                                          setState(() {
+                                            _senderId = suggestion.id;
+                                            _senderIdController.text =
+                                                suggestion.label;
+                                          });
+                                        },
+                                      )
                                 : SearchTextField(
-                              label: 'المرسل',
-                              textEditingController: _senderIdController,
-                              listType: "customer",
-                              onSuggestionSelected: (suggestion) {
-                                setState(() {
-                                  _senderId = suggestion.id;
-                                  _senderIdController.text = suggestion.label;
-                                });
-                              },
-                            )
-                                : SearchTextField(
-                              label: 'المرسل',
-                              textEditingController: _senderIdController,
-                              listType: "customer",
-                              onSuggestionSelected: (suggestion) {
-                                setState(() {
-                                  _senderId = suggestion.id;
-                                  _senderIdController.text = suggestion.label;
-                                });
-                              },
-                            ),
+                                    label: 'المرسل',
+                                    textEditingController: _senderIdController,
+                                    listType: "customer",
+                                    onSuggestionSelected: (suggestion) {
+                                      setState(() {
+                                        _senderId = suggestion.id;
+                                        _senderIdController.text =
+                                            suggestion.label;
+                                      });
+                                    },
+                                  ),
                           ],
                         );
                       },
@@ -294,7 +306,8 @@ class _AddTransferViewState extends State<AddTransferView> {
                           isAddReceiver = state.addReceiver;
                         }
 
-                        final isStoreMode = widget.argument?['transfer'] == null;
+                        final isStoreMode =
+                            widget.argument?['transfer'] == null;
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,7 +315,9 @@ class _AddTransferViewState extends State<AddTransferView> {
                             if (isStoreMode)
                               ElevatedButton(
                                 onPressed: () {
-                                  context.read<TransferBloc>().add(ToggleReceiverModeEvent());
+                                  context
+                                      .read<TransferBloc>()
+                                      .add(ToggleReceiverModeEvent());
                                 },
                                 child: Text(isAddReceiver
                                     ? '🔍 بحث عن مستلم'
@@ -311,33 +326,39 @@ class _AddTransferViewState extends State<AddTransferView> {
                             const SizedBox(height: 16),
                             isStoreMode
                                 ? isAddReceiver
-                                ? AddCustomerForm(
-                              countryCodeNotifier: countryReceiverCodeNotifier,
-                              nameController: _newReceiverController,
-                              phoneController: _newReceiverPhoneController,
-                            )
+                                    ? AddCustomerForm(
+                                        countryCodeNotifier:
+                                            countryReceiverCodeNotifier,
+                                        nameController: _newReceiverController,
+                                        phoneController:
+                                            _newReceiverPhoneController,
+                                      )
+                                    : SearchTextField(
+                                        label: 'اسم المستفيد',
+                                        textEditingController:
+                                            _clientNameController,
+                                        listType: "customer",
+                                        onSuggestionSelected: (suggestion) {
+                                          setState(() {
+                                            _receiverId = suggestion.id;
+                                            _clientNameController.text =
+                                                suggestion.label;
+                                          });
+                                        },
+                                      )
                                 : SearchTextField(
-                              label: 'اسم المستفيد',
-                              textEditingController: _clientNameController,
-                              listType: "customer",
-                              onSuggestionSelected: (suggestion) {
-                                setState(() {
-                                  _receiverId = suggestion.id;
-                                  _clientNameController.text = suggestion.label;
-                                });
-                              },
-                            )
-                                : SearchTextField(
-                              label: 'اسم المستفيد',
-                              textEditingController: _clientNameController,
-                              listType: "customer",
-                              onSuggestionSelected: (suggestion) {
-                                setState(() {
-                                  _receiverId = suggestion.id;
-                                  _clientNameController.text = suggestion.label;
-                                });
-                              },
-                            ),
+                                    label: 'اسم المستفيد',
+                                    textEditingController:
+                                        _clientNameController,
+                                    listType: "customer",
+                                    onSuggestionSelected: (suggestion) {
+                                      setState(() {
+                                        _receiverId = suggestion.id;
+                                        _clientNameController.text =
+                                            suggestion.label;
+                                      });
+                                    },
+                                  ),
                           ],
                         );
                       },

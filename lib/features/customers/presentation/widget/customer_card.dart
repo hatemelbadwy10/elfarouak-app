@@ -55,7 +55,7 @@ class CustomerCard extends StatelessWidget {
               Text(customer.customerPhone),
               const SizedBox(height: 4),
               Text(
-                "EGP ${customer.customerBalance}",
+                "${customer.customerCountry} ${customer.customerBalance}",
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
               ),
             ],

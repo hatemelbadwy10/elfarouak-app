@@ -42,3 +42,9 @@ class DeleteCashBoxEvent extends CashBoxEvent {
 
   DeleteCashBoxEvent({required this.id});
 }
+class UpdateCashBoxBalanceEvent extends CashBoxEvent{
+  final int id;
+  final UpdateModel updateModel;
+
+  UpdateCashBoxBalanceEvent({required this.id,required this.updateModel});
+}

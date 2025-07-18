@@ -67,7 +67,9 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
         tagId: event.tagId,
         dateRange: event.dateRange,
         page: currentPage,
-        isHome: event.isHome);
+        isHome: event.isHome,
+        cashBoxId: event.cashBoxId
+    );
 
     isLoading = false;
 
@@ -101,6 +103,7 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
             status: prevState.status,
             transferType: prevState.transferType,
             isLoadingMore: false, // Set to false after loading
+            cashBoxId: prevState.cashBoxId
           ));
         } else {
           log('r ${r.totalBalanceEgp}');
@@ -119,7 +122,9 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
               status: event.status,
               transferType: event.transferType,
               showBox: r.showBox,
-              cashBoxes: r.cashBoxes));
+              cashBoxes: r.cashBoxes,
+          cashBoxId: event.cashBoxId
+          ));
         }
 
         // Increment page for next load
@@ -154,6 +159,8 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
         totalTransfers: currentState.totalTransfers,
         totalAmountReceived: currentState.totalAmountReceived,
         totalBalanceEgp: currentState.totalBalanceEgp,
+        cashBoxId: currentState.cashBoxId
+
       ));
 
       // Use current state filters instead of event parameters for consistency
@@ -165,6 +172,7 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
         dateRange: currentState.dateRange,
         isLoadMore: true,
         page: currentPage,
+        cashBoxId: currentState.cashBoxId
       ));
     }
   }
@@ -335,6 +343,7 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
       event.toCashBoxId,
       event.amount,
       event.note,
+      event.exchangeFee
     );
 
     result.fold(

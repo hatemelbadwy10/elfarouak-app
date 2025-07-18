@@ -75,25 +75,33 @@ class Data {
 }
 
 class Datum extends CashBoxTransferEntity {
-  Datum({
-    required this.id,
-    required this.fromCashBoxIdRaw,
-    required this.toCashBoxIdRaw,
-    required this.amount,
-    required this.currency,
-    required this.notes,
-    required this.createdBy,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.fromCashBox,
-    required this.toCashBox,
-  }) : super(
-    fromCashBoxId: fromCashBox?.name ?? '',
-    toCashBoxId: toCashBox?.name ?? '',
-    amount: amount,
-    note: notes,
-      transferCreatedAt: createdAt.toString(),
-    creator: createdBy?.name??'No Name'
+  Datum(
+      {required this.id,
+      required this.fromCashBoxIdRaw,
+      required this.toCashBoxIdRaw,
+      required this.amount,
+      required this.currency,
+      required this.notes,
+      required this.createdBy,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.fromCashBox,
+      required this.toCashBox,
+       this.convertedAmount,
+      required this.status,
+       this.exchangeRate})
+      : super(
+            fromCashBoxId: fromCashBox?.name ?? '',
+            toCashBoxId: toCashBox?.name ?? '',
+            amount: amount,
+            note: notes,
+            transferCreatedAt: createdAt.toString(),
+            creator: createdBy?.name ?? 'No Name',
+            currency: currency,
+            convertedAmount: convertedAmount,
+            status: status,
+            exchangeRate: exchangeRate,
+            id: id
   );
 
   final int? id;
@@ -107,6 +115,9 @@ class Datum extends CashBoxTransferEntity {
   final DateTime? updatedAt;
   final CashBox? fromCashBox;
   final CashBox? toCashBox;
+  final String? convertedAmount;
+  final String status;
+  final String? exchangeRate;
 
   factory Datum.fromJson(Map<String, dynamic> json) {
     final fromCashBox = json["from_cash_box"] == null
@@ -117,20 +128,22 @@ class Datum extends CashBoxTransferEntity {
         : CashBox.fromJson(json["to_cash_box"]);
 
     return Datum(
-      id: json["id"],
-      fromCashBoxIdRaw: json["from_cash_box_id"],
-      toCashBoxIdRaw: json["to_cash_box_id"],
-      amount: json["amount"],
-      currency: json["currency"],
-      notes: json["notes"],
-      createdBy: json["created_by"] == null
-          ? null
-          : CreatedBy.fromJson(json["created_by"]),
-      createdAt: DateTime.tryParse(json["created_at"] ?? ""),
-      updatedAt: DateTime.tryParse(json["updated_at"] ?? ""),
-      fromCashBox: fromCashBox,
-      toCashBox: toCashBox,
-    );
+        id: json["id"],
+        fromCashBoxIdRaw: json["from_cash_box_id"],
+        toCashBoxIdRaw: json["to_cash_box_id"],
+        amount: json["amount"],
+        currency: json["currency"],
+        notes: json["notes"],
+        createdBy: json["created_by"] == null
+            ? null
+            : CreatedBy.fromJson(json["created_by"]),
+        createdAt: DateTime.tryParse(json["created_at"] ?? ""),
+        updatedAt: DateTime.tryParse(json["updated_at"] ?? ""),
+        fromCashBox: fromCashBox,
+        toCashBox: toCashBox,
+        convertedAmount: json['converted_amount'],
+        status: json['status'],
+        exchangeRate: json['exchange_rate']);
   }
 }
 

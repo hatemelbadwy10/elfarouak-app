@@ -3,10 +3,10 @@ class CustomerEntity {
   final String customerName;
   final String customerPhone;
   final String customerAddress;
-  final String customerGender;
+ // final String customerGender;
   final String customerNote;
   final String customerBalance;
-  final String customerCountry;
+  final String? customerCountry;
   final String customerProfilePicture;
 
 
@@ -15,10 +15,10 @@ class CustomerEntity {
     required this.customerName,
     required this.customerPhone,
     required this.customerAddress,
-    required this.customerGender,
+   // required this.customerGender,
     required this.customerNote,
     required this.customerBalance,
-    required this.customerCountry,
+     this.customerCountry,
     required this.customerProfilePicture,
   });
 
@@ -28,7 +28,7 @@ class CustomerEntity {
       customerName: json['name'],
       customerPhone: json['phone'],
       customerAddress: json['address']??"لا يوجد عنوان",
-      customerGender: json['gender'],
+      //customerGender: json['gender'],
       customerNote: json['note']??"لا يوجد ملاحظات",
       customerBalance: json['balance'],
       customerCountry: json['country'],
@@ -42,7 +42,7 @@ class CustomerEntity {
       'name': customerName,
       'phone': customerPhone,
       'address': customerAddress,
-      'gender': customerGender,
+     // 'gender': customerGender,
       'note': customerNote,
       'balance': customerBalance,
       'country': customerCountry,

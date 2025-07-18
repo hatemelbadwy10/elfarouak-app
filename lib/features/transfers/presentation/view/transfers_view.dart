@@ -55,6 +55,8 @@ class _TransferScreenState extends State<TransferScreen> {
                 dateRange: state.dateRange,
                 search: state.search,
                 transferType: state.transferType,
+                cashBoxId: state.cashBoxId
+
               ),
             );
       }

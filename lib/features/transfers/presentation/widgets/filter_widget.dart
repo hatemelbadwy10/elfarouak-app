@@ -3,6 +3,8 @@ import 'package:elfarouk_app/features/transfers/presentation/widgets/search_text
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
+import '../../../../user_info/user_info_bloc.dart';
 import '../../data/model/auto_complete_model.dart';
 
 class FilterDialog extends StatefulWidget {
@@ -18,6 +20,7 @@ class FilterDialogState extends State<FilterDialog> {
   String? _transferType; // Nullable transfer type
   DateTimeRange? _dateRange; // Nullable date range
   int? customerId; // To store the selected customer's ID
+  int? _selectedCashBoxId;
 
   @override
   Widget build(BuildContext context) {
@@ -52,13 +55,32 @@ class FilterDialogState extends State<FilterDialog> {
                 DropdownMenuItem(value: null, child: Text('اختر الحالة')),
                 // Allow null value
                 DropdownMenuItem(value: 'pending', child: Text('معلق')),
-                DropdownMenuItem(value: 'active', child: Text('مفعل')),
+                DropdownMenuItem(value: 'completed', child: Text('مكتمل')),
               ],
               decoration: const InputDecoration(
                 labelText: 'الحالة',
                 isDense: true,
                 contentPadding:
                     EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if(context.read<UserInfoBloc>().state.user?.role!="user") DropdownButtonFormField<int?>(
+              value: _selectedCashBoxId,
+              onChanged: (value) {
+                setState(() {
+                  _selectedCashBoxId = value;
+                });
+              },
+              items: const [
+                DropdownMenuItem(value: null, child: Text('اختر الفرع')),
+                DropdownMenuItem(value: 1, child: Text('فرع ليبيا')),
+                DropdownMenuItem(value: 2, child: Text('فرع مصر')),
+              ],
+              decoration: const InputDecoration(
+                labelText: 'الفرع',
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
               ),
             ),
             const SizedBox(height: 16),
@@ -142,7 +164,9 @@ class FilterDialogState extends State<FilterDialog> {
                   //tagId: customerId,
                   // Pass the customer ID
                   dateRange: filterData['date_range'].toString(),
-                ));
+              cashBoxId: _selectedCashBoxId, // ✅ هنا
+
+            ));
 
             Navigator.of(context).pop();
           },

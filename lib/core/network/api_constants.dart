@@ -6,7 +6,7 @@ class ApiConstants {
   static const String storeUser = "users/store";
   static const String updateUser = '/users/update/';
   static const String deleteUser = '/users/delete/';
-  static const String customers = 'customer/index';
+  static const String customers = 'customer/index?page=';
   static const String storeCustomer = 'customer/store';
   static const String updateCustomer = 'customer/update/';
   static const String deleteCustomer = 'customer/delete/';
@@ -19,6 +19,7 @@ class ApiConstants {
   static const String storeCashBox = 'cash-box/store';
   static const String updateCashBox = '/cash-box/update/';
   static const String deleteCashBox = '/cash-box/delete/';
+  static const String updateCashBoxBalance="cash-box/change-balance/";
   static String autoComplete(String resource, String query) {
     return '$resource/search?query=$query';
   }

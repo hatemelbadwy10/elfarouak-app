@@ -23,4 +23,14 @@ class CashBoxTransferRepoImpl extends CashBoxTransferRepo {
       return Left(failure.errorModel);
     }
   }
+
+  @override
+  Future<Either<ApiFaliureModel, String>> completeSuccess(int id) async{
+    try {
+      final result = await _transferDataSource.completeTransferCashBox(id);
+      return Right(result);
+    }on ServerException catch(failure){
+      return Left(failure.errorModel);
+    }
+  }
 }

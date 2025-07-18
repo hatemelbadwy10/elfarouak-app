@@ -3,7 +3,10 @@ part of 'customers_bloc.dart';
 @immutable
 sealed class CustomersEvent {}
 
-class GetCustomersEvent extends CustomersEvent {}
+class GetCustomersEvent extends CustomersEvent {
+  final int page;
+  GetCustomersEvent({this.page = 1});
+}
 
 class StoreCustomerEvent extends CustomersEvent {
   final String name;

@@ -29,3 +29,22 @@ class CashBoxTransferError extends CashBoxTransferState {
   @override
   List<Object?> get props => [message];
 }
+class CashBoxTransferCompleteLoading extends CashBoxTransferState {}
+
+class CashBoxTransferCompleteSuccess extends CashBoxTransferState {
+  final String message;
+
+  const CashBoxTransferCompleteSuccess(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class CashBoxTransferCompleteError extends CashBoxTransferState {
+  final String message;
+
+  const CashBoxTransferCompleteError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

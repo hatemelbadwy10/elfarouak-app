@@ -4,24 +4,35 @@ import 'package:elfarouk_app/features/cash_box_transfer_view/domain/entity/cash_
 
 import '../../../cash_box_transfer_view/data/model/cash_box_transfer_model.dart';
 
-abstract class CashBoxTransferDataSource{
-  Future<List<CashBoxTransferEntity>>getCashBoxTransferEntity();
+abstract class CashBoxTransferDataSource {
+  Future<List<CashBoxTransferEntity>> getCashBoxTransferEntity();
+
+  Future completeTransferCashBox(int id);
 }
-class CashBoxTransferDataSourceImpl extends CashBoxTransferDataSource{
+
+class CashBoxTransferDataSourceImpl extends CashBoxTransferDataSource {
   final ApiService _apiService;
 
   CashBoxTransferDataSourceImpl(this._apiService);
-  @override
-  Future<List<CashBoxTransferEntity>> getCashBoxTransferEntity() async{
-    final response = await _apiService.get('cash-box-transfers/index');
-   return response.fold((l){
-     throw ServerException(errorModel: l);
-   }, (r){
-     final List<dynamic> dataJsonList = r.data['data']['data'];
-     return dataJsonList
-         .map((json) => Datum.fromJson(json))
-         .toList();
-   });
 
+  @override
+  Future<List<CashBoxTransferEntity>> getCashBoxTransferEntity() async {
+    final response = await _apiService.get('cash-box-transfers/index');
+    return response.fold((l) {
+      throw ServerException(errorModel: l);
+    }, (r) {
+      final List<dynamic> dataJsonList = r.data['data']['data'];
+      return dataJsonList.map((json) => Datum.fromJson(json)).toList();
+    });
+  }
+
+  @override
+  Future completeTransferCashBox(int id) async {
+    final response = await _apiService.post("cash-box-transfers/$id/complete");
+    return response.fold((l) {
+      throw ServerException(errorModel: l);
+    }, (r) {
+      return r.message;
+    });
   }
 }

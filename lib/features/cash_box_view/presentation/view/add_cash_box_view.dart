@@ -173,6 +173,7 @@ class _AddCashBoxViewState extends State<AddCashBoxView> {
                             child: CustomTextField(
                               hintText: 'الرصيد',
                               controller: balanceController,
+                              enable: widget.argument==null?true:false,
                               keyboardType: TextInputType.number,
                               validator: (value) {
                                 if (value!.isEmpty) return 'الرصيد مطلوب';

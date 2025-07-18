@@ -21,6 +21,7 @@ class GetTransfersSuccess extends TransferState {
   final String? transferType;
   final String? tagId;
   final String? dateRange;
+  final int? cashBoxId;
   final bool showBox;
   final List<CashBoxes> cashBoxes;
 
@@ -38,6 +39,7 @@ class GetTransfersSuccess extends TransferState {
       this.transferType,
       this.tagId,
       this.dateRange,
+        this.cashBoxId,
       required this.showBox,
       required this.cashBoxes});
 }

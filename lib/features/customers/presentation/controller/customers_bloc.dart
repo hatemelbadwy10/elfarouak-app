@@ -24,15 +24,16 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     on<DeleteCustomerEvent>(_deleteCustomer);
   }
 
-  Future<void> _getCustomers(GetCustomersEvent event,
-      Emitter<CustomersState> emit) async {
+  Future<void> _getCustomers(GetCustomersEvent event, Emitter<CustomersState> emit) async {
     emit(CustomerLoading());
-    final result = await _customersRepo.getCustomers();
+    final result = await _customersRepo.getCustomers(page: event.page);
+
     result.fold(
           (l) => emit(CustomerFailure(errMessage: l.message)),
-          (r) => emit(CustomerSuccess(list: r)),
+          (r) => emit(CustomerSuccess(list: r, currentPage: event.page)),
     );
   }
+
 
   Future<void> _storeCustomer(StoreCustomerEvent event,
       Emitter<CustomersState> emit) async {

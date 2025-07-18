@@ -60,3 +60,14 @@ final class DeleteCashBoxFailure extends CashBoxState {
 
   DeleteCashBoxFailure({required this.errMessage});
 }
+final class UpdateCashBoxBalanceLoading extends CashBoxState{}
+final class UpdateCashBoxBalanceSuccess extends CashBoxState{
+  final String successMsg;
+
+  UpdateCashBoxBalanceSuccess(this.successMsg);
+}
+final class UpdateCashBoxBalanceFailure extends CashBoxState{
+  final String errorMsg;
+
+  UpdateCashBoxBalanceFailure({required this.errorMsg});
+}

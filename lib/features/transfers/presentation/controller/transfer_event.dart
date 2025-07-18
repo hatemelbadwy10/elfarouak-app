@@ -12,6 +12,7 @@ class GetTransfersEvent extends TransferEvent {
   final bool isLoadMore;
   final int page;
   final bool? isHome;
+  final int? cashBoxId;
 
   GetTransfersEvent({
     this.search,
@@ -21,7 +22,8 @@ class GetTransfersEvent extends TransferEvent {
     this.dateRange,
     this.isLoadMore = false,
     this.page = 1,
-    this.isHome
+    this.isHome,
+    this.cashBoxId,
   });
 }
 class LoadMoreTransfersEvent extends TransferEvent {
@@ -30,6 +32,7 @@ class LoadMoreTransfersEvent extends TransferEvent {
   final String? transferType;
   final int? tagId;
   final String? dateRange;
+  final int? cashBoxId;
 
 
   LoadMoreTransfersEvent({
@@ -38,6 +41,7 @@ class LoadMoreTransfersEvent extends TransferEvent {
     this.transferType,
     this.tagId,
     this.dateRange,
+    this.cashBoxId
   });
 }
 class StoreTransferEvent extends TransferEvent {
@@ -152,12 +156,14 @@ class SendMoneyEvent extends TransferEvent {
   final int toCashBoxId;
   final double amount;
   final String? note;
+  final double? exchangeFee;
 
   SendMoneyEvent({
     required this.fromCashBoxId,
     required this.toCashBoxId,
     required this.amount,
     this.note,
+    this.exchangeFee
   });
 }
 class UpdateImage extends TransferEvent{

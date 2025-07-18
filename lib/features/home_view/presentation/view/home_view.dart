@@ -14,7 +14,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../user_info/user_info_bloc.dart';
 import '../../../transfers/presentation/controller/transfer_bloc.dart';
 import '../../../transfers/presentation/widgets/branch_balance_widget.dart';
-import '../widgets/CustomerTransferBottomSheet.dart';
 import '../widgets/balance_card_widget.dart';
 import '../widgets/partial_update_widget.dart';
 import '../widgets/send_money_sheet.dart';
@@ -57,9 +56,9 @@ class _HomeViewState extends State<HomeView> {
         final state = context.read<TransferBloc>().state;
         if (state is GetTransfersSuccess && !state.hasReachedEnd) {
           context.read<TransferBloc>().add(LoadMoreTransfersEvent(
-            status: "pending",
-            dateRange: dateRange,
-          ));
+                status: "pending",
+                dateRange: dateRange,
+              ));
         }
       }
     });
@@ -76,12 +75,12 @@ class _HomeViewState extends State<HomeView> {
     final dateRange = DateTime.now().yesterdayToTodayRange();
 
     context.read<TransferBloc>().add(
-      GetTransfersEvent(
-        status: "pending",
-        dateRange: dateRange,
-        isHome: true,
-      ),
-    );
+          GetTransfersEvent(
+            status: "pending",
+            dateRange: dateRange,
+            isHome: true,
+          ),
+        );
   }
 
   Future<void> _onRefreshTransfers() async {
@@ -125,7 +124,8 @@ class _HomeViewState extends State<HomeView> {
         if (state is GetTransfersSuccess && state.showBox) {
           final totalBalanceText = "${state.totalBalanceEgp ?? '0'}";
           final cashBoxes = state.cashBoxes;
-          final isAdmin = context.read<UserInfoBloc>().state.user?.role == "admin";
+          final isAdmin =
+              context.read<UserInfoBloc>().state.user?.role == "admin";
 
           return Container(
             width: double.infinity,
@@ -187,9 +187,12 @@ class _HomeViewState extends State<HomeView> {
                           return SizedBox(
                             width: cardWidth,
                             child: BranchBalanceCard(
+                              totalBalance: box.totalBalance,
+                              expense: box.expenses,
                               name: box.name,
                               branchBalance: box.balance.toString(),
                               customerBalance: box.customersBalance.toString(),
+                              currency: box.currency,
                             ),
                           );
                         }).toList(),
@@ -250,7 +253,8 @@ class _HomeViewState extends State<HomeView> {
                   onPress: () {
                     getIt<NavigationService>()
                         .navigateTo(RouteNames.addTransferView, arguments: {
-                      "exchange_fee": state is GetTransfersSuccess ? state.rate : "9.14"
+                      "exchange_fee":
+                          state is GetTransfersSuccess ? state.rate : "9.14"
                     });
                   },
                 ),
@@ -264,7 +268,10 @@ class _HomeViewState extends State<HomeView> {
                   onPress: () {
                     showDialog(
                       context: context,
-                      builder: (context) => const PartialUpdateDialog(),
+                      builder: (context) => BlocProvider(
+                        create: (context) => TransferBloc(getIt()),
+                        child: const PartialUpdateDialog(),
+                      ),
                     );
                   },
                 ),
@@ -280,7 +287,8 @@ class _HomeViewState extends State<HomeView> {
                       context: context,
                       isScrollControlled: true,
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(20)),
                       ),
                       builder: (_) => BlocProvider(
                         create: (context) => TransferBloc(getIt()),
@@ -297,7 +305,8 @@ class _HomeViewState extends State<HomeView> {
                   label: "تحويل بين العملاء",
                   color: AppColors.primary,
                   onPress: () {
-                   getIt<NavigationService>().navigateTo(RouteNames.customerTransfersView);
+                    getIt<NavigationService>()
+                        .navigateTo(RouteNames.customerTransfersView);
                   },
                 ),
               ),
@@ -318,7 +327,8 @@ class _HomeViewState extends State<HomeView> {
                       onPress: () {
                         getIt<NavigationService>()
                             .navigateTo(RouteNames.addTransferView, arguments: {
-                          "exchange_fee": state is GetTransfersSuccess ? state.rate : "9.14"
+                          "exchange_fee":
+                              state is GetTransfersSuccess ? state.rate : "9.14"
                         });
                       },
                     ),
@@ -332,7 +342,10 @@ class _HomeViewState extends State<HomeView> {
                       onPress: () {
                         showDialog(
                           context: context,
-                          builder: (context) => const PartialUpdateDialog(),
+                          builder: (context) => BlocProvider(
+                            create: (context) => TransferBloc(getIt()),
+                            child: const PartialUpdateDialog(),
+                          ),
                         );
                       },
                     ),
@@ -343,26 +356,28 @@ class _HomeViewState extends State<HomeView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: QuickActionWidget(
-                      icon: Icons.send_rounded,
-                      label: "إرسال أموال",
-                      color: Colors.orange,
-                      onPress: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                          ),
-                          builder: (_) => BlocProvider(
-                            create: (context) => TransferBloc(getIt()),
-                            child: const SendMoneySheet(),
-                          ),
-                        );
-                      },
+                  if (context.read<UserInfoBloc>().state.user?.role != "user")
+                    Expanded(
+                      child: QuickActionWidget(
+                        icon: Icons.send_rounded,
+                        label: "إرسال أموال",
+                        color: Colors.orange,
+                        onPress: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20)),
+                            ),
+                            builder: (_) => BlocProvider(
+                              create: (context) => TransferBloc(getIt()),
+                              child: const SendMoneySheet(),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: QuickActionWidget(
@@ -370,7 +385,8 @@ class _HomeViewState extends State<HomeView> {
                       label: "تحويل بين العملاء",
                       color: AppColors.primary,
                       onPress: () {
-                        getIt<NavigationService>().navigateTo(RouteNames.customerTransfersView);
+                        getIt<NavigationService>()
+                            .navigateTo(RouteNames.customerTransfersView);
                       },
                     ),
                   ),
@@ -425,8 +441,8 @@ class _HomeViewState extends State<HomeView> {
                       _hasLoadedInitialData && _initialRate != null
                           ? '$_initialRate جنيه مصري'
                           : state is GetTransfersSuccess
-                          ? '${state.rate} جنيه مصري'
-                          : 'جاري التحديث...',
+                              ? '${state.rate} جنيه مصري'
+                              : 'جاري التحديث...',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -448,13 +464,14 @@ class _HomeViewState extends State<HomeView> {
               exchangeFee: _hasLoadedInitialData && _initialRate != null
                   ? _initialRate!
                   : state is GetTransfersSuccess
-                  ? state.rate
-                  : 0.0,
+                      ? state.rate
+                      : 0.0,
             ),
           ),
           body: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -497,7 +514,8 @@ class _HomeViewState extends State<HomeView> {
                               _initialTotalBalance = null;
                               _initialTotalTransfers = null;
                               _initialTotalAmount = null;
-                              final dateRange = DateTime.now().yesterdayToTodayRange();
+                              final dateRange =
+                                  DateTime.now().yesterdayToTodayRange();
                               context.read<TransferBloc>().add(
                                   GetTransfersEvent(
                                       status: "pending",
@@ -508,16 +526,18 @@ class _HomeViewState extends State<HomeView> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              final rate = _hasLoadedInitialData && _initialRate != null
-                                  ? _initialRate!
-                                  : state is GetTransfersSuccess
-                                  ? state.rate
-                                  : 0.0;
+                              final rate =
+                                  _hasLoadedInitialData && _initialRate != null
+                                      ? _initialRate!
+                                      : state is GetTransfersSuccess
+                                          ? state.rate
+                                          : 0.0;
 
-                              getIt<NavigationService>()
-                                  .navigateTo(RouteNames.transfersView, arguments: {
-                                "exchange_fee": rate,
-                              });
+                              getIt<NavigationService>().navigateTo(
+                                  RouteNames.transfersView,
+                                  arguments: {
+                                    "exchange_fee": rate,
+                                  });
                             },
                             child: Text(
                               'عرض الكل',
@@ -537,7 +557,8 @@ class _HomeViewState extends State<HomeView> {
 
                   // Transfers List - Made with fixed height to prevent overflow
                   SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.4, // 40% of screen height
+                    height: MediaQuery.of(context).size.height *
+                        0.4, // 40% of screen height
                     child: _buildTransfersContent(state),
                   ),
                 ],
@@ -604,10 +625,10 @@ class _HomeViewState extends State<HomeView> {
 
                 final dateRange = DateTime.now().yesterdayToTodayRange();
                 context.read<TransferBloc>().add(GetTransfersEvent(
-                  status: "pending",
-                  dateRange: dateRange,
-                  isHome: true,
-                ));
+                      status: "pending",
+                      dateRange: dateRange,
+                      isHome: true,
+                    ));
               },
               icon: const Icon(Icons.refresh, size: 18),
               label: const Text('إعادة المحاولة'),

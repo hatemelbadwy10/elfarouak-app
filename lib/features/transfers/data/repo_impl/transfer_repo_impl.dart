@@ -25,7 +25,9 @@ class TransferRepoImpl extends TransferRepo {
       int? tagId,
       String? dateRange,
       int page = 1,
-      bool? isHome}) async {
+      bool? isHome,
+      int? cashBoxId
+      }) async {
     try {
       final result = await _transferDataSource.getTransfers(
           search: search,
@@ -34,7 +36,9 @@ class TransferRepoImpl extends TransferRepo {
           tagId: tagId.toString(),
           dateRange: dateRange,
           page: page,
-          isHome: isHome ?? false);
+          isHome: isHome ?? false,
+          cashBoxId: cashBoxId
+      );
       return Right(result);
     } on ServerException catch (failure) {
       return Left(failure.errorModel);
@@ -117,11 +121,11 @@ class TransferRepoImpl extends TransferRepo {
   }
 
   @override
-  Future<Either<ApiFaliureModel, String>> sendMoney(
-      int fromCashBoxId, int toCashBoxId, double amount, String? note) async {
+  Future<Either<ApiFaliureModel, String>> sendMoney(int fromCashBoxId,
+      int toCashBoxId, double amount, String? note, double? exchangeFee) async {
     try {
       final result = await _transferDataSource.sendMoney(
-          fromCashBoxId, toCashBoxId, amount, note);
+          fromCashBoxId, toCashBoxId, amount, note, exchangeFee);
       return Right(result);
     } on ServerException catch (failure) {
       return Left(failure.errorModel);

@@ -14,26 +14,25 @@ class PartialUpdateDialog extends StatelessWidget {
     final balanceController = TextEditingController();
     final senderIdController = TextEditingController();
     int senderId = 1;
+    bool isLoading = false; // Moved outside StatefulBuilder
+
+    String? mapArabicActionToApiValue(String? value) {
+      switch (value) {
+        case 'إضافة':
+          return 'add';
+        case 'خصم':
+          return 'subtract';
+        case 'تعيين':
+          return 'set';
+        default:
+          return null;
+      }
+    }
 
     return BlocProvider(
       create: (context) => TransferBloc(getIt()),
       child: StatefulBuilder(
         builder: (context, setState) {
-          bool isLoading = false;
-
-          String? mapArabicActionToApiValue(String? value) {
-            switch (value) {
-              case 'إضافة':
-                return 'add';
-              case 'خصم':
-                return 'subtract';
-              case 'تعيين':
-                return 'set';
-              default:
-                return null;
-            }
-          }
-
           return BlocListener<TransferBloc, TransferState>(
             listener: (context, state) {
               if (state is PartialUpdateCustomerLoading) {
@@ -95,6 +94,9 @@ class PartialUpdateDialog extends StatelessWidget {
                   isLoading: isLoading,
                   text: 'تنفيذ',
                   onPressed: () {
+                    // Prevent multiple submissions
+                    if (isLoading) return;
+
                     final balance = double.tryParse(balanceController.text);
                     if (selectedAction == null || balance == null) {
                       ScaffoldMessenger.of(context).showSnackBar(

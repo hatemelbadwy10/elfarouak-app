@@ -4,12 +4,18 @@ class BranchBalanceCard extends StatelessWidget {
   final String name;
   final String branchBalance;
   final String customerBalance;
+  final String currency;
+  final int totalBalance;
+  final double expense;
 
   const BranchBalanceCard({
     super.key,
     required this.name,
     required this.branchBalance,
     required this.customerBalance,
+    required this.currency,
+    required this.totalBalance,
+    required this.expense,
   });
 
   @override
@@ -27,9 +33,7 @@ class BranchBalanceCard extends StatelessWidget {
         children: [
           Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text('رصيد الفرع: $branchBalance'),
-          const SizedBox(height: 4),
-          Text('رصيد العملاء: $customerBalance'),
+          Text('رصيد الفرع: $totalBalance $currency'),
         ],
       ),
     );

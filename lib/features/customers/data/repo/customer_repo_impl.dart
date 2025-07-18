@@ -12,9 +12,10 @@ class CustomerRepoImpl extends CustomersRepo {
   CustomerRepoImpl(this._customerDataSource);
 
   @override
-  Future<Either<ApiFaliureModel, List<CustomerEntity>>> getCustomers() async {
+  @override
+  Future<Either<ApiFaliureModel, List<CustomerEntity>>> getCustomers({int page = 1}) async {
     try {
-      final result = await _customerDataSource.getCustomers();
+      final result = await _customerDataSource.getCustomers(page: page);
       return Right(result);
     } on ServerException catch (failure) {
       return Left(failure.errorModel);

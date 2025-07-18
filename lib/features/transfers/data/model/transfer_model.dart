@@ -161,7 +161,8 @@ class Datum extends TransferEntity {
     exchangeRateWithFee: exchangeRateWithFee,
     dayExchangeRate: dayExchangeRate,
     phone: receiver?.phone,
-    image: image
+    image: image,
+    cashBoxName: cashBox?.name
 
 
       );
@@ -169,7 +170,7 @@ class Datum extends TransferEntity {
   final int? id;
   final dynamic senderId;
   final Receiver? sender;
-  final dynamic? receiverId;
+  final dynamic receiverId;
   final Receiver? receiver;
   final String? amountSent;
   final String? currencySent;
@@ -178,15 +179,15 @@ class Datum extends TransferEntity {
   final String? dayExchangeRate;
   final String? exchangeRateWithFee;
   final String? transferType;
-  final dynamic? cashBoxId;
+  final dynamic cashBoxId;
   final CashBox? cashBox;
   final String? status;
   final String? note;
   final dynamic sellerReceiverId;
   final CashBox? sellerReceiver;
-  final dynamic? sellerSenderId;
+  final dynamic sellerSenderId;
   final CashBox? sellerSender;
-  final dynamic? tagId;
+  final dynamic tagId;
   final Tag? tag;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -233,7 +234,7 @@ class CashBox {
     required this.name,
   });
 
-  final dynamic? id;
+  final dynamic id;
   final String? name;
 
   factory CashBox.fromJson(Map<String, dynamic> json) {
@@ -251,7 +252,7 @@ class Receiver {
     required this.phone,
   });
 
-  final dynamic? id;
+  final dynamic id;
   final String? name;
   final String? phone;
 
@@ -326,6 +327,7 @@ class CashBoxes {
   final double balanceInEgp;
   final double customersBalance;
   final double expenses;
+  final int totalBalance;
 
   CashBoxes({
     required this.id,
@@ -336,6 +338,7 @@ class CashBoxes {
     required this.balanceInEgp,
     required this.customersBalance,
     required this.expenses,
+    required this.totalBalance
   });
 
   factory CashBoxes.fromJson(Map<String, dynamic> json) {
@@ -348,6 +351,7 @@ class CashBoxes {
       balanceInEgp: (json['balance_in_egp'] ?? 0).toDouble(),
       customersBalance: (json['customers_balance'] ?? 0).toDouble(),
       expenses: (json['expenses'] ?? 0).toDouble(),
+      totalBalance: json['total_balance']
     );
   }
 }

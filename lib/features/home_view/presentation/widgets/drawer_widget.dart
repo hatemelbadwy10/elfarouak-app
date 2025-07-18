@@ -54,7 +54,7 @@ class DrawerWidget extends StatelessWidget {
             ],
           ),
         ),
-        ListTile(
+        if (context.read<UserInfoBloc>().state.user?.role !="user")  ListTile(
           title: const Text('المستخدمين'),
           onTap: () {
             getIt<NavigationService>().navigateTo(RouteNames.usersView);
@@ -73,7 +73,7 @@ class DrawerWidget extends StatelessWidget {
                 arguments: {"exchange_fee": exchangeFee});
           },
         ),
-        ListTile(
+       if (context.read<UserInfoBloc>().state.user?.role !="user") ListTile(
           title: const Text('الصناديق النقدية'),
           onTap: () {
             getIt<NavigationService>().navigateTo(RouteNames.cashBoxView);
@@ -91,7 +91,7 @@ class DrawerWidget extends StatelessWidget {
             getIt<NavigationService>().navigateTo(RouteNames.debtorsView);
           },
         ),
-        ListTile(
+        if (context.read<UserInfoBloc>().state.user?.role !="user") ListTile(
           title: const Text('تحويلات الفروع'),
           onTap: () {
             getIt<NavigationService>()

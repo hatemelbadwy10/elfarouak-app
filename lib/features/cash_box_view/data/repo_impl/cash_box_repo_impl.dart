@@ -5,6 +5,7 @@ import '../../domain/entity/cash_box_entity.dart';
 import '../../domain/repo/cash_box_repo.dart';
 import '../data_source/cash_box_data_source.dart';
 import '../model/store_cash_box_model.dart';
+import '../model/update_model.dart';
 
 class CashBoxRepoImpl extends CashBoxRepo {
   final CashBoxDataSource _cashBoxDataSource;
@@ -22,7 +23,8 @@ class CashBoxRepoImpl extends CashBoxRepo {
   }
 
   @override
-  Future<Either<ApiFaliureModel, String>> storeCashBox(StoreCashBoxModel entity) async {
+  Future<Either<ApiFaliureModel, String>> storeCashBox(
+      StoreCashBoxModel entity) async {
     try {
       final result = await _cashBoxDataSource.storeCashBox(entity);
       return Right(result);
@@ -32,7 +34,8 @@ class CashBoxRepoImpl extends CashBoxRepo {
   }
 
   @override
-  Future<Either<ApiFaliureModel, String>> updateCashBox(StoreCashBoxModel entity, int id) async {
+  Future<Either<ApiFaliureModel, String>> updateCashBox(
+      StoreCashBoxModel entity, int id) async {
     try {
       final result = await _cashBoxDataSource.updateCashBox(entity, id);
       return Right(result);
@@ -45,6 +48,16 @@ class CashBoxRepoImpl extends CashBoxRepo {
   Future<Either<ApiFaliureModel, String>> deleteCashBox(int id) async {
     try {
       final result = await _cashBoxDataSource.deleteCashBox(id);
+      return Right(result);
+    } on ServerException catch (failure) {
+      return Left(failure.errorModel);
+    }
+  }
+
+  @override
+  Future<Either<ApiFaliureModel, String>> updateCashBoxBalance(int id,UpdateModel updateModel) async {
+    try {
+      final result = await _cashBoxDataSource.updateCashBoxBalance(id,updateModel);
       return Right(result);
     } on ServerException catch (failure) {
       return Left(failure.errorModel);

@@ -15,8 +15,19 @@ class CashBoxTransferBloc
       final Either failureOrTransfers = await repo.getCashBoxTransfer();
 
       failureOrTransfers.fold(
-            (failure) => emit(CashBoxTransferError(failure.message)),
-            (transfers) => emit(CashBoxTransferLoaded(transfers)),
+        (failure) => emit(CashBoxTransferError(failure.message)),
+        (transfers) => emit(CashBoxTransferLoaded(transfers)),
+      );
+    });
+    on<CompleteCashBoxTransferEvent>((event, emit) async {
+      emit(CashBoxTransferCompleteLoading());
+
+      final result = await repo.completeSuccess(event.id);
+
+      result.fold(
+        (failure) => emit(CashBoxTransferCompleteError(failure.message)),
+        (successMessage) =>
+            emit(CashBoxTransferCompleteSuccess(successMessage)),
       );
     });
   }

@@ -4,15 +4,20 @@ import 'package:elfarouk_app/core/network/api_constants.dart';
 import 'package:elfarouk_app/core/network/exception/server_exception.dart';
 import 'package:elfarouk_app/core/network/network_provider/api_services.dart';
 
-
 import '../../domain/entity/cash_box_entity.dart';
 import '../model/store_cash_box_model.dart';
+import '../model/update_model.dart';
 
 abstract class CashBoxDataSource {
   Future<List<CashBoxEntity>> getCashBox();
+
   Future<String> storeCashBox(StoreCashBoxModel entity);
+
   Future<String> updateCashBox(StoreCashBoxModel entity, int id);
+
   Future<String> deleteCashBox(int id);
+
+  Future<String> updateCashBoxBalance(int id, UpdateModel updateModel);
 }
 
 class CashBoxDataSourceImpl extends CashBoxDataSource {
@@ -29,9 +34,7 @@ class CashBoxDataSourceImpl extends CashBoxDataSource {
       throw ServerException(errorModel: l);
     }, (r) {
       final List<dynamic> dataJsonList = r.data['data'];
-      return dataJsonList
-          .map((json) => CashBoxEntity.fromJson(json))
-          .toList();
+      return dataJsonList.map((json) => CashBoxEntity.fromJson(json)).toList();
     });
   }
 
@@ -49,14 +52,18 @@ class CashBoxDataSourceImpl extends CashBoxDataSource {
 
   @override
   Future<String> storeCashBox(StoreCashBoxModel entity) async {
-    final result = await _apiService.post(ApiConstants.storeCashBox, body: entity.toJson());
+    final result = await _apiService.post(ApiConstants.storeCashBox,
+        body: entity.toJson());
 
     if (result.isRight()) {
-      final r = result.getOrElse(() => throw Exception('Unexpected right failure'));
+      final r =
+          result.getOrElse(() => throw Exception('Unexpected right failure'));
       log('right ${r.data}');
       return r.data['message'];
     } else {
-      final l = result.swap().getOrElse(() => throw Exception('Unexpected left success'));
+      final l = result
+          .swap()
+          .getOrElse(() => throw Exception('Unexpected left success'));
       log('left status: ${l.status}');
       log('left message: ${l.message}');
       log('left data: ${l.data}');
@@ -76,6 +83,18 @@ class CashBoxDataSourceImpl extends CashBoxDataSource {
     final url = '${ApiConstants.updateCashBox}/$id';
     final result = await _apiService.put(url, body: entity.toJson());
 
+    return result.fold((l) {
+      throw ServerException(errorModel: l);
+    }, (r) {
+      return r.data['message'];
+    });
+  }
+
+  @override
+  Future<String> updateCashBoxBalance(int id, UpdateModel updateModel) async {
+    final result = await _apiService.post(
+        "${ApiConstants.updateCashBoxBalance}$id",
+        body: updateModel.toJson());
     return result.fold((l) {
       throw ServerException(errorModel: l);
     }, (r) {

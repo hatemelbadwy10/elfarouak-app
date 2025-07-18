@@ -15,7 +15,8 @@ abstract class TransferRepo {
     int? tagId,
     String? dateRange,
     int page = 1,
-    bool? isHome
+    bool? isHome,
+    int? cashBoxId
   });
 
   Future<Either<ApiFaliureModel, String>> storeTransfer(StoreTransferModel model);
@@ -30,7 +31,7 @@ abstract class TransferRepo {
         String? type,
       });
   Future<Either<ApiFaliureModel,String>>sendMoney(
-      int fromCashBoxId, int toCashBoxId, double amount, String? note);
+      int fromCashBoxId, int toCashBoxId, double amount, String? note,double? exchangeFee);
   Future<Either<ApiFaliureModel,String>>updateImage(
       int transferId, File image, );
 Future<Either<ApiFaliureModel,List<AutoCompleteModel>>>getTags(String type);

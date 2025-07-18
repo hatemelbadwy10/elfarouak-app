@@ -26,7 +26,7 @@ class BalanceCardWidget extends StatelessWidget {
         children: [
           Text(label, style: Styles.text15.copyWith(color: color)),
           const SizedBox(height: 8),
-          Text(balance,
+          Text("$balance جنيه مصري",
               style: Styles.text18SemiBold.copyWith(color: color)),
         ],
       ),

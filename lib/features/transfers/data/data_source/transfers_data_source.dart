@@ -19,7 +19,9 @@ abstract class TransfersDataSource {
       String? tagId,
       String? dateRange,
       int page = 1,
-      bool isHome = false});
+      bool isHome = false,
+      int? cashBoxId
+      });
 
   Future storeTransfer(StoreTransferModel model);
 
@@ -35,8 +37,8 @@ abstract class TransfersDataSource {
   Future partialUpdate(int customerId,
       {double? balance, String? transferType, String? type});
 
-  Future sendMoney(
-      int fromCashBoxId, int toCashBoxId, double amount, String? note);
+  Future sendMoney(int fromCashBoxId, int toCashBoxId, double amount,
+      String? note, double? exchangeFee);
 
   Future updatePhoto(int id, File image);
 
@@ -62,8 +64,9 @@ class TransfersDataSourceImpl extends TransfersDataSource {
       String? tagId,
       String? dateRange,
       int page = 1,
+      int? cashBoxId,
       bool isHome = false}) async {
-    final queryParameters = <String, String>{
+      final queryParameters = <String, String>{
       'page': page.toString(),
       "page_size": "10"
     };
@@ -79,6 +82,9 @@ class TransfersDataSourceImpl extends TransfersDataSource {
     }
     if (tagId != null && tagId.toLowerCase() != 'null') {
       queryParameters['tag_id'] = tagId;
+    }
+    if(cashBoxId !=null){
+      queryParameters['cash_box_id']=cashBoxId.toString();
     }
     if (dateRange != null &&
         dateRange.isNotEmpty &&
@@ -269,10 +275,15 @@ class TransfersDataSourceImpl extends TransfersDataSource {
   }
 
   @override
-  Future sendMoney(
-      int fromCashBoxId, int toCashBoxId, double amount, String? note) async {
-    final result = await _apiService.post("cash-box/$fromCashBoxId/transfer",
-        body: {"amount": amount, "to_cash_box_id": toCashBoxId, "note": note});
+  Future sendMoney(int fromCashBoxId, int toCashBoxId, double amount,
+      String? note, double? exchangeFee) async {
+    final result =
+        await _apiService.post("cash-box/$fromCashBoxId/transfer", body: {
+      "amount": amount,
+      "to_cash_box_id": toCashBoxId,
+      "note": note,
+      "exchange_fee": exchangeFee
+    });
     return result.fold((l) {
       throw ServerException(errorModel: l);
     }, (r) {

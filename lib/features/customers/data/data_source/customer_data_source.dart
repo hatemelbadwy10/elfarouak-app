@@ -9,7 +9,7 @@ import 'package:elfarouk_app/features/customers/domain/entity/customer_entity.da
 import '../../../../core/network/exception/server_exception.dart';
 
 abstract class CustomerDataSource {
-  Future<List<CustomerEntity>> getCustomers();
+  Future<List<CustomerEntity>> getCustomers({int page});
 
   Future<String> storeCustomer(StoreCustomerModel storeCustomerModel);
 
@@ -24,16 +24,16 @@ class CustomerDataSourceImpl extends CustomerDataSource {
   CustomerDataSourceImpl(this._apiService);
 
   @override
-  Future<List<CustomerEntity>> getCustomers() async {
-    final result = await _apiService.get(ApiConstants.customers);
+  Future<List<CustomerEntity>> getCustomers({int page = 1}) async {
+    final result = await _apiService.get('${ApiConstants.customers}$page');
     return result.fold((l) {
       log('l ${l.data}');
       throw ServerException(errorModel: l);
     }, (r) {
       log('r.data ${r.data['data']['data']}');
-      final List<dynamic> dataJsonList = r.data['data']['data'];
+      final List<dynamic> dataJsonList = r.data['data']['data']['data'];
       final customers =
-          dataJsonList.map((json) => CustomerEntity.fromJson(json)).toList();
+      dataJsonList.map((json) => CustomerEntity.fromJson(json)).toList();
       return customers;
     });
   }
@@ -71,7 +71,7 @@ class CustomerDataSourceImpl extends CustomerDataSource {
       log('left message: ${l.message}');
       log('left data: ${l.data}');
 
-      if (l.status == true && (l.message?.contains('successfully') ?? false)) {
+      if (l.status == true && (l.message.contains('successfully') ?? false)) {
         log('[!] Treating LEFT as success based on message!');
         return l.message ?? 'Customer created';
       }

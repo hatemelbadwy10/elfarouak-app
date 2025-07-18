@@ -8,3 +8,11 @@ abstract class CashBoxTransferEvent extends Equatable {
 }
 
 class GetCashBoxTransferEvent extends CashBoxTransferEvent {}
+class CompleteCashBoxTransferEvent extends CashBoxTransferEvent {
+  final int id;
+
+  const CompleteCashBoxTransferEvent(this.id);
+
+  @override
+  List<Object?> get props => [id];
+}

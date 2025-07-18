@@ -9,9 +9,11 @@ final class CustomerLoading extends CustomersState {}
 
 final class CustomerSuccess extends CustomersState {
   final List<CustomerEntity> list;
+  final int currentPage;
 
-  CustomerSuccess({required this.list});
+  CustomerSuccess({required this.list, this.currentPage = 1});
 }
+
 
 final class CustomerFailure extends CustomersState {
   final String errMessage;

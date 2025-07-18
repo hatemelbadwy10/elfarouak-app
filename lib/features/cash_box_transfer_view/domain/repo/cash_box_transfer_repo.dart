@@ -4,4 +4,5 @@ import 'package:elfarouk_app/features/cash_box_transfer_view/domain/entity/cash_
 
 abstract class CashBoxTransferRepo{
   Future<Either<ApiFaliureModel,List<CashBoxTransferEntity>>>getCashBoxTransfer();
+  Future<Either<ApiFaliureModel,String>>completeSuccess(int id);
 }

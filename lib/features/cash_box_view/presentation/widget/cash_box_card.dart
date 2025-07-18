@@ -5,13 +5,13 @@ import '../../domain/entity/cash_box_entity.dart';
 
 class CashBoxCard extends StatelessWidget {
   final CashBoxEntity cashBox;
-  final VoidCallback onDelete;
+  final VoidCallback onChangeBalance;
   final VoidCallback onUpdate;
 
   const CashBoxCard({
     super.key,
     required this.cashBox,
-    required this.onDelete,
+    required this.onChangeBalance,
     required this.onUpdate,
   });
 
@@ -39,10 +39,12 @@ class CashBoxCard extends StatelessWidget {
         trailing:context.read<UserInfoBloc>().state.user?.role=='admin'? PopupMenuButton<String>(
           onSelected: (value) {
             if (value == 'update') onUpdate();
-            if (value == 'delete') onDelete();
+            if (value == 'changeBalance') onChangeBalance();
           },
           itemBuilder: (context) => const [
             PopupMenuItem(value: 'update', child: Text('تحديث')),
+            PopupMenuItem(value: 'changeBalance', child: Text('تغير الرصيد')),
+
             // PopupMenuItem(value: 'delete', child: Text('حذف')),
           ],
           icon: const Icon(Icons.more_vert),

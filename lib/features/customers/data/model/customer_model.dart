@@ -94,7 +94,7 @@ class Datum extends CustomerEntity {
             customerName: name!,
             customerPhone: phone!,
             customerAddress: address!,
-            customerGender: gender!,
+           // customerGender: gender!,
             customerNote: note!,
             customerBalance: balance!,
             customerCountry: country!,
