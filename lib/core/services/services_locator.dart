@@ -19,6 +19,7 @@ import 'package:elfarouk_app/features/home_view/data/data_source/home_data_sourc
 import 'package:elfarouk_app/features/home_view/data/repo/home_repo_impl.dart';
 import 'package:elfarouk_app/features/home_view/domain/repo/home_repo.dart';
 import 'package:elfarouk_app/features/home_view/presentation/controller/home_bloc.dart';
+import 'package:elfarouk_app/features/reports/presentation/controller/transfer_report_bloc.dart';
 import 'package:elfarouk_app/features/transfers/data/data_source/transfers_data_source.dart';
 import 'package:elfarouk_app/features/transfers/domain/repo/transfer_repo.dart';
 import 'package:elfarouk_app/features/transfers/presentation/controller/transfer_bloc.dart';
@@ -38,6 +39,9 @@ import '../../features/login_screen/data/data_source/login_remote_data_source.da
 import '../../features/login_screen/data/repository/repository_impl.dart';
 import '../../features/login_screen/domain/repository/repository.dart';
 import '../../features/login_screen/presentation/controller/login_bloc.dart';
+import '../../features/reports/data/data_source/reports_data_source.dart';
+import '../../features/reports/data/repo/transfer_report_repo_impl.dart';
+import '../../features/reports/domain/repo/transfer_report_repo.dart';
 import '../../features/transfers/data/repo_impl/transfer_repo_impl.dart';
 import '../../features/users/presentation/controller/user_bloc.dart';
 import '../network/network_provider/api_services.dart';
@@ -68,6 +72,7 @@ _transferDI();
 _expenseDI();
 _debtors();
 _cashBoxTransfer();
+_reportsDI();
 }
 _getUsers(){
   getIt.registerLazySingleton<UsersDataSource>(
@@ -119,4 +124,9 @@ _cashBoxTransfer(){
   getIt.registerLazySingleton<CashBoxTransferDataSource>(()=>CashBoxTransferDataSourceImpl(getIt()));
   getIt.registerLazySingleton<CashBoxTransferRepo>(()=>CashBoxTransferRepoImpl(getIt()));
   getIt.registerFactory(() => CashBoxTransferBloc(getIt()));
+}
+_reportsDI(){
+  getIt.registerLazySingleton<ReportsDataSource>(()=>ReportsDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<TransferReportRepo>(()=>TransferReportRepoImpl(getIt()));
+  getIt.registerFactory(() => TransferReportBloc(getIt()));
 }

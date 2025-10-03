@@ -9,7 +9,7 @@ class GetTransfersLoading extends TransferState {}
 
 class GetTransfersSuccess extends TransferState {
   final List<TransferEntity> list;
-  final double rate;
+  final dynamic rate;
   final bool hasReachedEnd;
   final int currentPage;
   final bool isLoadingMore;
@@ -39,7 +39,7 @@ class GetTransfersSuccess extends TransferState {
       this.transferType,
       this.tagId,
       this.dateRange,
-        this.cashBoxId,
+      this.cashBoxId,
       required this.showBox,
       required this.cashBoxes});
 }
@@ -207,14 +207,31 @@ class StoreCustomerTransferLoading extends TransferState {}
 class StoreCustomerTransferSuccess extends TransferState {}
 
 class StoreCustomerTransferFailure extends TransferState {}
-class GetSingleTransferLoading extends TransferState{}
-class GetSingleTransferSuccess extends TransferState{
+
+class GetSingleTransferLoading extends TransferState {}
+
+class GetSingleTransferSuccess extends TransferState {
   final TransferEntity transferEntity;
 
   GetSingleTransferSuccess({required this.transferEntity});
 }
-class GetSingleTransferFailure extends TransferState{
+
+class GetSingleTransferFailure extends TransferState {
   final String errMessage;
 
   GetSingleTransferFailure({required this.errMessage});
+}
+
+class UpdateRateSuccess extends TransferState {
+  final String message;
+
+  UpdateRateSuccess({required this.message});
+}
+
+class UpdateRateLoading extends TransferState {}
+
+class UpdateRateFailure extends TransferState {
+  final String errMessage;
+
+  UpdateRateFailure({required this.errMessage});
 }

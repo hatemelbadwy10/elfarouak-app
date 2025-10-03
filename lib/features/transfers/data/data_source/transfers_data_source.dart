@@ -20,8 +20,7 @@ abstract class TransfersDataSource {
       String? dateRange,
       int page = 1,
       bool isHome = false,
-      int? cashBoxId
-      });
+      int? cashBoxId});
 
   Future storeTransfer(StoreTransferModel model);
 
@@ -49,6 +48,8 @@ abstract class TransfersDataSource {
   Future storeCustomerTransfer(CustomersTransferModel customer);
 
   Future<TransferEntity> getSingleTransfer(int id);
+
+  Future<String> updateRate(double rate);
 }
 
 class TransfersDataSourceImpl extends TransfersDataSource {
@@ -66,7 +67,7 @@ class TransfersDataSourceImpl extends TransfersDataSource {
       int page = 1,
       int? cashBoxId,
       bool isHome = false}) async {
-      final queryParameters = <String, String>{
+    final queryParameters = <String, String>{
       'page': page.toString(),
       "page_size": "10"
     };
@@ -83,8 +84,8 @@ class TransfersDataSourceImpl extends TransfersDataSource {
     if (tagId != null && tagId.toLowerCase() != 'null') {
       queryParameters['tag_id'] = tagId;
     }
-    if(cashBoxId !=null){
-      queryParameters['cash_box_id']=cashBoxId.toString();
+    if (cashBoxId != null) {
+      queryParameters['cash_box_id'] = cashBoxId.toString();
     }
     if (dateRange != null &&
         dateRange.isNotEmpty &&
@@ -98,7 +99,8 @@ class TransfersDataSourceImpl extends TransfersDataSource {
       final response = await _apiService.get(uri.toString(), queryParameters: {
         "is_home": isHome,
       });
-
+      log('🟡 Sending GET request to: ${uri.toString()}');
+      log('🟡 Extra queryParameters sent in body: {"is_home": $isHome}');
       log('getTransfers response: $response');
 
       return response.fold(
@@ -364,6 +366,17 @@ class TransfersDataSourceImpl extends TransfersDataSource {
     }, (r) {
       final transferEntity = Datum.fromJson(r.data["data"]);
       return transferEntity;
+    });
+  }
+
+  @override
+  Future<String> updateRate(double rate) async {
+    final response =
+        await _apiService.post(ApiConstants.updateRate, body: {"rate": rate});
+    return response.fold((l) {
+      throw ServerException(errorModel: l);
+    }, (r) {
+      return r.data['message'];
     });
   }
 }

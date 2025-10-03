@@ -32,7 +32,7 @@ class CashBoxCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("الدولة: ${cashBox.country}"),
-            Text("الرصيد: EGP ${cashBox.balance}"),
+            Text("الرصيد: ${cashBox.country} ${cashBox.balance}"),
             Text("ملاحظات: ${cashBox.note.isNotEmpty ? cashBox.note : 'لا يوجد'}"),
           ],
         ),

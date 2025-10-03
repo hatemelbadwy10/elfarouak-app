@@ -43,6 +43,7 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
     on<ToggleReceiverModeEvent>(_onToggleAddReceiver);
     on<StoreCustomerTransferEvent>(_storeCustomerTransfer);
     on<GetSingleTransferEvent>(_getSingleTransfer);
+    on<UpdateRateEvent>(_updateRate);
   }
 
   void _getTransfers(
@@ -439,6 +440,16 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
       emit(GetSingleTransferFailure(errMessage: l.message));
     }, (r) {
       emit(GetSingleTransferSuccess(transferEntity: r));
+    });
+  }
+
+  void _updateRate(UpdateRateEvent event,Emitter<TransferState>emit)async{
+    emit(UpdateRateLoading());
+    final result =await _transferRepo.updateRate(event.rate);
+    result.fold((l) {
+      emit(UpdateRateFailure(errMessage: l.message));
+    }, (r) {
+      emit(UpdateRateSuccess(message: r));
     });
   }
 }

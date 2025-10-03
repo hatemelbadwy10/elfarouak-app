@@ -26,8 +26,7 @@ class TransferRepoImpl extends TransferRepo {
       String? dateRange,
       int page = 1,
       bool? isHome,
-      int? cashBoxId
-      }) async {
+      int? cashBoxId}) async {
     try {
       final result = await _transferDataSource.getTransfers(
           search: search,
@@ -37,8 +36,7 @@ class TransferRepoImpl extends TransferRepo {
           dateRange: dateRange,
           page: page,
           isHome: isHome ?? false,
-          cashBoxId: cashBoxId
-      );
+          cashBoxId: cashBoxId);
       return Right(result);
     } on ServerException catch (failure) {
       return Left(failure.errorModel);
@@ -181,6 +179,16 @@ class TransferRepoImpl extends TransferRepo {
       int id) async {
     try {
       final result = await _transferDataSource.getSingleTransfer(id);
+      return Right(result);
+    } on ServerException catch (failure) {
+      return Left(failure.errorModel);
+    }
+  }
+
+  @override
+  Future<Either<ApiFaliureModel, String>> updateRate(double rate) async {
+    try {
+      final result = await _transferDataSource.updateRate(rate);
       return Right(result);
     } on ServerException catch (failure) {
       return Left(failure.errorModel);

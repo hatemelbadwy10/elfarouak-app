@@ -19,4 +19,8 @@ class RouteNames {
   static const String debtorsView = 'debtors_view';
   static const String cashBoxTransferView = 'cash_box_transfer_view';
   static const String customerTransfersView = 'customer_transfer_view';
+  static const String reportsView = 'reports_view';
+  static const String cashBoxesReport = 'cash_boxes_report';
+  static const String customersReport = 'customers_report';
+  static const String transfersReport = 'transfers_report';
 }

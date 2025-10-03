@@ -5,7 +5,7 @@ class BranchBalanceCard extends StatelessWidget {
   final String branchBalance;
   final String customerBalance;
   final String currency;
-  final int totalBalance;
+  final dynamic totalBalance;
   final double expense;
 
   const BranchBalanceCard({

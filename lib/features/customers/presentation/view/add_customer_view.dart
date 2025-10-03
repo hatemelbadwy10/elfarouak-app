@@ -273,6 +273,7 @@ class _AddCustomerViewState extends State<AddCustomerView> {
                                 hintText: 'الرصيد',
                                 controller: balanceController,
                                 keyboardType: TextInputType.number,
+                                enable: widget.argument == null? true : false,
                                 validator: (value) {
                                   if (value!.isEmpty) return 'الرصيد مطلوب';
                                   if (double.tryParse(value) == null) {

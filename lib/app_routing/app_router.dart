@@ -20,6 +20,9 @@ import 'package:elfarouk_app/features/expense/presentation/view/single_expense_v
 import 'package:elfarouk_app/features/home_view/presentation/controller/home_bloc.dart';
 import 'package:elfarouk_app/features/home_view/presentation/view/home_view.dart';
 import 'package:elfarouk_app/features/login_screen/presentation/controller/login_bloc.dart';
+import 'package:elfarouk_app/features/reports/presentation/controller/transfer_report_bloc.dart';
+import 'package:elfarouk_app/features/reports/presentation/view/all_reports_view.dart';
+import 'package:elfarouk_app/features/reports/presentation/view/customers_report_view.dart';
 import 'package:elfarouk_app/features/transfers/presentation/controller/transfer_bloc.dart';
 import 'package:elfarouk_app/features/transfers/presentation/view/add_transfer_view.dart';
 import 'package:elfarouk_app/features/transfers/presentation/view/single_transfer.dart';
@@ -37,6 +40,8 @@ import '../features/debtor_customers/presentation/controller/debtor_customer_blo
 import '../features/debtor_customers/presentation/view/debtor_customer_view.dart';
 import '../features/home_view/presentation/widgets/CustomerTransferBottomSheet.dart';
 import '../features/login_screen/presentation/view/login_screen.dart';
+import '../features/reports/presentation/view/cash_box_reports_report.dart';
+import '../features/reports/presentation/view/transfers_report_view.dart';
 import '../features/splahs_screen/view/splash_screen.dart';
 
 class AppRouter {
@@ -113,6 +118,34 @@ class AppRouter {
               )),
           settings,
         );
+        case RouteNames.transfersReport:
+        return _getPageRoute(
+            BlocProvider(
+              create: (_) => TransferReportBloc(getIt()),
+              child: const TransferReportScreen(),
+            ),
+            settings);
+
+      case RouteNames.cashBoxesReport:
+        return _getPageRoute(
+            BlocProvider(
+              create: (_) => TransferReportBloc(getIt()),
+              child: const CashboxReportView(),
+            ),
+            settings);
+      case RouteNames.reportsView:
+        return _getPageRoute(
+          const AllReportsView(),
+          settings
+        );
+      case RouteNames.customersReport:
+        return _getPageRoute(
+            BlocProvider(
+              create: (_) => TransferReportBloc(getIt()),
+              child: const CustomersReportView(),
+            ),
+            settings);
+
       case RouteNames.transfersView:
         return _getPageRoute(
           BlocProvider(

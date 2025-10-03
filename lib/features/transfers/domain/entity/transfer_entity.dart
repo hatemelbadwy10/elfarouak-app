@@ -4,7 +4,7 @@ import '../../data/model/transfer_model.dart';
 
 class TransfersEntity {
   final List<TransferEntity> list;
-  final double transferRate;
+  final dynamic transferRate;
   final dynamic totalTransfers;
   final dynamic totalAmountReceived;
   final dynamic totalBalanceEgp;

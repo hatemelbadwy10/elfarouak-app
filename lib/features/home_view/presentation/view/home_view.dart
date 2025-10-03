@@ -15,6 +15,7 @@ import '../../../../user_info/user_info_bloc.dart';
 import '../../../transfers/presentation/controller/transfer_bloc.dart';
 import '../../../transfers/presentation/widgets/branch_balance_widget.dart';
 import '../widgets/balance_card_widget.dart';
+import '../widgets/custom_app_bar.dart';
 import '../widgets/partial_update_widget.dart';
 import '../widgets/send_money_sheet.dart';
 import '../widgets/transfer_list_widget.dart';
@@ -29,7 +30,7 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   final ScrollController _scrollController = ScrollController();
 
-  double? _initialRate;
+  dynamic? _initialRate;
   dynamic _initialTotalBalance;
   dynamic _initialTotalTransfers;
   dynamic _initialTotalAmount;
@@ -413,51 +414,12 @@ class _HomeViewState extends State<HomeView> {
         }
 
         return Scaffold(
-          appBar: AppBar(
-            backgroundColor: AppColors.primary,
-            title: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'الفاروق',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'سعر الدينار الليبي:',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    Text(
-                      _hasLoadedInitialData && _initialRate != null
-                          ? '$_initialRate جنيه مصري'
-                          : state is GetTransfersSuccess
-                              ? '${state.rate} جنيه مصري'
-                              : 'جاري التحديث...',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.greenAccent,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            actions: [
-              AddWidget(
-                rate: state is GetTransfersSuccess ? state.rate : 9,
-              )
-            ],
+          appBar: CustomMainAppBar(
+            rate: state is GetTransfersSuccess ? state.rate : null,
+            hasLoadedInitialData: _hasLoadedInitialData,
+            initialRate: _initialRate,
+            transferBloc: context.read<TransferBloc>(), onRefresh: _onRefreshTransfers,
+
           ),
           drawer: Drawer(
             child: DrawerWidget(

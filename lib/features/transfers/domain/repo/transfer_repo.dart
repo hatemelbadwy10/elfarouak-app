@@ -38,4 +38,5 @@ Future<Either<ApiFaliureModel,List<AutoCompleteModel>>>getTags(String type);
 Future<Either<ApiFaliureModel,String>>updateStatus(int id , String status);
 Future<Either<ApiFaliureModel,String>>storeCustomerTransfer(CustomersTransferModel customer);
 Future<Either<ApiFaliureModel,TransferEntity>>getSingleTransfer (int id);
+Future<Either<ApiFaliureModel,String>>updateRate(double rate);
 }

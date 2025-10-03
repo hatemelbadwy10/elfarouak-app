@@ -11,7 +11,7 @@ import '../../../../app_routing/route_names.dart';
 class DrawerWidget extends StatelessWidget {
   const DrawerWidget({super.key, required this.exchangeFee});
 
-  final double exchangeFee;
+  final dynamic exchangeFee;
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +96,13 @@ class DrawerWidget extends StatelessWidget {
           onTap: () {
             getIt<NavigationService>()
                 .navigateTo(RouteNames.cashBoxTransferView);
+          },
+        ),
+        if (context.read<UserInfoBloc>().state.user?.role !="user") ListTile(
+          title: const Text('تقارير التحويلات'),
+          onTap: () {
+            getIt<NavigationService>()
+                .navigateTo(RouteNames.reportsView);
           },
         ),
         BlocBuilder<HomeBloc, HomeState>(

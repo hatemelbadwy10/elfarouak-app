@@ -6,7 +6,7 @@ import '../../../../core/services/services_locator.dart';
 
 class AddWidget extends StatelessWidget {
   const AddWidget({super.key, required this.rate});
-  final double rate;
+  final dynamic rate;
 
   @override
   Widget build(BuildContext context) {

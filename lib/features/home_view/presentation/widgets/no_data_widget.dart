@@ -6,7 +6,7 @@ import '../../../../core/utils/app_colors.dart';
 
 class NoDataWidget extends StatelessWidget {
   const NoDataWidget({super.key, required this.rate});
-  final double rate;
+  final dynamic rate;
 
   @override
   Widget build(BuildContext context) {

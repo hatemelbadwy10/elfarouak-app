@@ -17,7 +17,7 @@ import '../../../../user_info/user_info_bloc.dart';
 class TransferCard extends StatefulWidget {
   final bool isSender;
   final TransferEntity transfer;
-  final double exchangeFee;
+  final dynamic exchangeFee;
   final bool? isHome;
   final void Function()? onPress;
 

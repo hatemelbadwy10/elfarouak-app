@@ -41,7 +41,7 @@ class Data extends TransfersEntity {
   );
 
   final Transfers? transfers;
-  final double? rate;
+  final dynamic? rate;
   final dynamic totalTransfers;
   final dynamic totalAmountReceived;
   final dynamic totalBalanceEgp;
@@ -327,7 +327,7 @@ class CashBoxes {
   final double balanceInEgp;
   final double customersBalance;
   final double expenses;
-  final int totalBalance;
+  final dynamic totalBalance;
 
   CashBoxes({
     required this.id,
