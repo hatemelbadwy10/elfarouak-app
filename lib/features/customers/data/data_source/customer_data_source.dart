@@ -7,6 +7,7 @@ import 'package:elfarouk_app/features/customers/data/model/store_customer_model.
 import 'package:elfarouk_app/features/customers/domain/entity/customer_entity.dart';
 
 import '../../../../core/network/exception/server_exception.dart';
+import '../model/customer_partial_update_model.dart';
 
 abstract class CustomerDataSource {
   Future<List<CustomerEntity>> getCustomers({int page});
@@ -16,6 +17,9 @@ abstract class CustomerDataSource {
   Future<String> updateCustomer(StoreCustomerModel storeCustomerModel, int id);
 
   Future<String> deleteCustomer(int id);
+  Future<CustomerPartialUpadteModel> getCustomerActivities(
+      {required int customerId, int page = 1});
+  Future<String> undoActivity({required int activityId});
 }
 
 class CustomerDataSourceImpl extends CustomerDataSource {
@@ -33,7 +37,7 @@ class CustomerDataSourceImpl extends CustomerDataSource {
       log('r.data ${r.data['data']['data']}');
       final List<dynamic> dataJsonList = r.data['data']['data']['data'];
       final customers =
-      dataJsonList.map((json) => CustomerEntity.fromJson(json)).toList();
+          dataJsonList.map((json) => CustomerEntity.fromJson(json)).toList();
       return customers;
     });
   }
@@ -55,18 +59,21 @@ class CustomerDataSourceImpl extends CustomerDataSource {
 
     final response = await _apiService.post(
       ApiConstants.storeCustomer,
-      body: formData ,
+      body: formData,
     );
 
     log("storeCustomerModel.toJson(): ${storeCustomerModel.toJson()}");
     log('response: $response');
 
     if (response.isRight()) {
-      final r = response.getOrElse(() => throw Exception('Unexpected right failure'));
+      final r =
+          response.getOrElse(() => throw Exception('Unexpected right failure'));
       log('right ${r.data}');
       return r.data['message'];
     } else {
-      final l = response.swap().getOrElse(() => throw Exception('Unexpected left success'));
+      final l = response
+          .swap()
+          .getOrElse(() => throw Exception('Unexpected left success'));
       log('left status: ${l.status}');
       log('left message: ${l.message}');
       log('left data: ${l.data}');
@@ -80,7 +87,6 @@ class CustomerDataSourceImpl extends CustomerDataSource {
     }
   }
 
-
   @override
   Future<String> updateCustomer(
       StoreCustomerModel storeCustomerModel, int id) async {
@@ -92,6 +98,32 @@ class CustomerDataSourceImpl extends CustomerDataSource {
       throw ServerException(errorModel: l);
     }, (r) {
       return r.data['message'];
+    });
+  }
+
+  @override
+  Future<CustomerPartialUpadteModel> getCustomerActivities(
+      {required int customerId, int page = 1}) async {
+    final url = '${ApiConstants.customerActivities}/$customerId?page=$page';
+    final result = await _apiService.get(url);
+
+    return result.fold((l) {
+      log('Error fetching activities: ${l.data}');
+      throw ServerException(errorModel: l);
+    }, (r) {
+      return CustomerPartialUpadteModel.fromJson(r.data);
+    });
+  }
+
+  @override
+  Future<String> undoActivity({required int activityId}) async {
+    final url = '${ApiConstants.undoActivity}/$activityId/undo';
+    final result = await _apiService.post(url);
+
+    return result.fold((l) {
+      throw ServerException(errorModel: l);
+    }, (r) {
+      return r.data['message'] ?? 'Activity undone successfully';
     });
   }
 }

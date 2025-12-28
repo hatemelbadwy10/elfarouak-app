@@ -14,7 +14,6 @@ final class CustomerSuccess extends CustomersState {
   CustomerSuccess({required this.list, this.currentPage = 1});
 }
 
-
 final class CustomerFailure extends CustomersState {
   final String errMessage;
 
@@ -61,4 +60,32 @@ final class DeleteCustomerFailure extends CustomersState {
   final String errMessage;
 
   DeleteCustomerFailure({required this.errMessage});
+}
+
+final class CustomerActivitiesLoading extends CustomersState {}
+
+final class CustomerActivitiesSuccess extends CustomersState {
+  final CustomerPartialUpadteModel activitiesData;
+  
+  CustomerActivitiesSuccess({required this.activitiesData});
+}
+
+final class CustomerActivitiesFailure extends CustomersState {
+  final String errMessage;
+  
+  CustomerActivitiesFailure({required this.errMessage});
+}
+
+final class UndoActivityLoading extends CustomersState {}
+
+final class UndoActivitySuccess extends CustomersState {
+  final String message;
+  
+  UndoActivitySuccess({required this.message});
+}
+
+final class UndoActivityFailure extends CustomersState {
+  final String errMessage;
+  
+  UndoActivityFailure({required this.errMessage});
 }

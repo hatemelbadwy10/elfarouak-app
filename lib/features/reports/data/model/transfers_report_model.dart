@@ -56,11 +56,11 @@ class Row {
 
   final int? id;
   final String? customer;
-  final int? amount;
-  final double? buyRate;
-  final double? total;
-  final double? exchangeRate;
-  final double? profit;
+  final dynamic amount;
+  final dynamic buyRate;
+  final dynamic total;
+  final dynamic exchangeRate;
+  final dynamic profit;
 
   factory Row.fromJson(Map<String, dynamic> json){
     return Row(
@@ -73,8 +73,8 @@ class Row {
       profit: json["profit"],
     );
   }
-
 }
+
 
 class Summary {
   Summary({
@@ -83,7 +83,7 @@ class Summary {
     required this.totalProfit,
   });
 
-  final int? totalTransfers;
+  final dynamic? totalTransfers;
   final dynamic  totalAmount;
   final dynamic totalProfit;
 

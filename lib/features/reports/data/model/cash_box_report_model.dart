@@ -35,7 +35,7 @@ class Activity {
   final String? old;
   final String? activityNew;
   final String? operation;
-  final int? amount;
+  final dynamic amount;
   final String? currency;
   final String? causerName;
   final DateTime? createdAt;

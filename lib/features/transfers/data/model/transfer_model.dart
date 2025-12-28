@@ -41,7 +41,7 @@ class Data extends TransfersEntity {
   );
 
   final Transfers? transfers;
-  final dynamic? rate;
+  final dynamic rate;
   final dynamic totalTransfers;
   final dynamic totalAmountReceived;
   final dynamic totalBalanceEgp;

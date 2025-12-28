@@ -30,4 +30,6 @@ class ApiConstants {
   static const String deleteExpense ='expense/delete/';
   static const String getDebtor = 'customer/debtor-customers';
   static const String updateRate = "update-rate";
+   static const String customerActivities = 'customer/admin/balance-activities';
+  static const String undoActivity = 'customer/admin/balance-activities';
 }

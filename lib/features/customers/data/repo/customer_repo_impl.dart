@@ -6,6 +6,8 @@ import 'package:elfarouk_app/features/customers/data/model/store_customer_model.
 import 'package:elfarouk_app/features/customers/domain/entity/customer_entity.dart';
 import 'package:elfarouk_app/features/customers/domain/repo/customers_repo.dart';
 
+import '../model/customer_partial_update_model.dart';
+
 class CustomerRepoImpl extends CustomersRepo {
   final CustomerDataSource _customerDataSource;
 
@@ -48,6 +50,24 @@ class CustomerRepoImpl extends CustomersRepo {
       StoreCustomerModel storeCustomerModel, int id) async {
     try {
       final result = await _customerDataSource.updateCustomer(storeCustomerModel, id);
+      return Right(result);
+    } on ServerException catch (failure) {
+      return Left(failure.errorModel);
+    }
+  }
+    Future<Either<ApiFaliureModel, CustomerPartialUpadteModel>> getCustomerActivities({required int customerId, int page = 1}) async {
+    try {
+      final result = await _customerDataSource.getCustomerActivities(customerId: customerId, page: page);
+      return Right(result);
+    } on ServerException catch (failure) {
+      return Left(failure.errorModel);
+    }
+  }
+  
+  @override
+  Future<Either<ApiFaliureModel, String>> undoActivity({required int activityId}) async {
+    try {
+      final result = await _customerDataSource.undoActivity(activityId: activityId);
       return Right(result);
     } on ServerException catch (failure) {
       return Left(failure.errorModel);

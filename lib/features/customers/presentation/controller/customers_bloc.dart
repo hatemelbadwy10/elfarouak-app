@@ -6,12 +6,12 @@ import 'package:meta/meta.dart';
 import '../../../../app_routing/route_names.dart';
 import '../../../../core/services/navigation_service.dart';
 import '../../../../core/services/services_locator.dart';
+import '../../data/model/customer_partial_update_model.dart';
 import '../../data/model/store_customer_model.dart';
 import '../../domain/entity/customer_entity.dart';
 import '../../domain/repo/customers_repo.dart';
 
 part 'customers_event.dart';
-
 part 'customers_state.dart';
 
 class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
@@ -22,6 +22,8 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     on<StoreCustomerEvent>(_storeCustomer);
     on<UpdateCustomerEvent>(_updateCustomer);
     on<DeleteCustomerEvent>(_deleteCustomer);
+    on<GetCustomerActivitiesEvent>(_getCustomerActivities);
+    on<UndoActivityEvent>(_undoActivity);
   }
 
   Future<void> _getCustomers(GetCustomersEvent event, Emitter<CustomersState> emit) async {
@@ -29,14 +31,12 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     final result = await _customersRepo.getCustomers(page: event.page);
 
     result.fold(
-          (l) => emit(CustomerFailure(errMessage: l.message)),
-          (r) => emit(CustomerSuccess(list: r, currentPage: event.page)),
+      (l) => emit(CustomerFailure(errMessage: l.message)),
+      (r) => emit(CustomerSuccess(list: r, currentPage: event.page)),
     );
   }
 
-
-  Future<void> _storeCustomer(StoreCustomerEvent event,
-      Emitter<CustomersState> emit) async {
+  Future<void> _storeCustomer(StoreCustomerEvent event, Emitter<CustomersState> emit) async {
     emit(StoreCustomerLoading());
 
     final result = await _customersRepo.storeCustomer(StoreCustomerModel(
@@ -52,11 +52,11 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     ));
 
     result.fold(
-          (failure) {
+      (failure) {
         log('Store customer failed: ${failure.message}');
         emit(StoreCustomerFailure(errMessage: failure.message));
       },
-          (successMessage) {
+      (successMessage) {
         log('Store customer success');
         emit(StoreCustomerSuccess(message: successMessage));
         Fluttertoast.showToast(msg: successMessage);
@@ -68,8 +68,7 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     );
   }
 
-  Future<void> _updateCustomer(UpdateCustomerEvent event,
-      Emitter<CustomersState> emit) async {
+  Future<void> _updateCustomer(UpdateCustomerEvent event, Emitter<CustomersState> emit) async {
     emit(UpdateCustomerLoading());
 
     final result = await _customersRepo.updateCustomer(
@@ -88,11 +87,11 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     );
 
     result.fold(
-          (l) {
+      (l) {
         emit(UpdateCustomerFailure(errMessage: l.message));
         Fluttertoast.showToast(msg: l.message);
       },
-          (r) {
+      (r) {
         emit(UpdateCustomerSuccess(message: r));
         Fluttertoast.showToast(msg: r);
         getIt<NavigationService>().navigateToAndRemoveUntil(
@@ -103,20 +102,52 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     );
   }
 
-  Future<void> _deleteCustomer(DeleteCustomerEvent event,
-      Emitter<CustomersState> emit) async {
+  Future<void> _deleteCustomer(DeleteCustomerEvent event, Emitter<CustomersState> emit) async {
     emit(DeleteCustomerLoading());
 
     final result = await _customersRepo.deleteCustomer(event.id);
 
     result.fold(
-          (l) => emit(DeleteCustomerFailure(errMessage: l.message)),
-          (r) {
+      (l) => emit(DeleteCustomerFailure(errMessage: l.message)),
+      (r) {
         emit(DeleteCustomerSuccess(message: r));
         getIt<NavigationService>().navigateToAndRemoveUntil(
           RouteNames.customerView,
           predicate: (route) => route.settings.name == RouteNames.homeView,
         );
+      },
+    );
+  }
+
+  Future<void> _getCustomerActivities(GetCustomerActivitiesEvent event, Emitter<CustomersState> emit) async {
+    emit(CustomerActivitiesLoading());
+    
+    final result = await _customersRepo.getCustomerActivities(
+      customerId: event.customerId,
+      page: event.page,
+    );
+    
+    result.fold(
+      (l) => emit(CustomerActivitiesFailure(errMessage: l.message)),
+      (r) => emit(CustomerActivitiesSuccess(activitiesData: r)),
+    );
+  }
+  
+  Future<void> _undoActivity(UndoActivityEvent event, Emitter<CustomersState> emit) async {
+    emit(UndoActivityLoading());
+    
+    final result = await _customersRepo.undoActivity(activityId: event.activityId);
+    
+    result.fold(
+      (l) {
+        emit(UndoActivityFailure(errMessage: l.message));
+        Fluttertoast.showToast(msg: l.message);
+      },
+      (r) {
+        emit(UndoActivitySuccess(message: r));
+        Fluttertoast.showToast(msg: r);
+        // Refresh activities after undo
+        add(GetCustomerActivitiesEvent(customerId: event.customerId));
       },
     );
   }

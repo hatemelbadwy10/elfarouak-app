@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:elfarouk_app/features/customers/domain/entity/customer_entity.dart';
 
 import '../../../../core/services/services_locator.dart';
+import '../view/customer_partial_update_view.dart';
 
 class CustomerCard extends StatelessWidget {
   const CustomerCard({
@@ -26,11 +27,15 @@ class CustomerCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        getIt<NavigationService>().navigateTo(
-          RouteNames.singleCustomerView,
-          arguments: {
-            'customer': customer,
-          },
+        // Navigate to customer activities view
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CustomerActivitiesView(
+              customerId: customer.customerId,
+              customerName: customer.customerName,
+            ),
+          ),
         );
       },
       child: Card(
@@ -63,21 +68,101 @@ class CustomerCard extends StatelessWidget {
           trailing: PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'update') onUpdate();
-              if (value == 'delete') onDelete();
+              if (value == 'delete') _showDeleteDialog(context);
+              if (value == 'activities') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CustomerActivitiesView(
+                      customerId: customer.customerId,
+                      customerName: customer.customerName,
+                    ),
+                  ),
+                );
+              }
             },
             itemBuilder: (context) => const [
               PopupMenuItem(
+                value: 'activities',
+                child: Row(
+                  children: [
+                    Icon(Icons.history, size: 20),
+                    SizedBox(width: 8),
+                    Text('الأنشطة'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
                 value: 'update',
-                child: Text('تحديث'),
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 20),
+                    SizedBox(width: 8),
+                    Text('تحديث'),
+                  ],
+                ),
               ),
               PopupMenuItem(
                 value: 'delete',
-                child: Text('حذف'),
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, size: 20, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('حذف', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
               ),
             ],
             icon: const Icon(Icons.more_vert),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            SizedBox(width: 8),
+            Text('حذف العميل'),
+          ],
+        ),
+        content: Text(
+          'هل أنت متأكد من حذف ${customer.customerName}؟ لا يمكن التراجع عن هذا الإجراء.',
+          style: const TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'إلغاء',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              onDelete();
+            },
+            child: const Text(
+              'حذف',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }

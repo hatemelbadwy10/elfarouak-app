@@ -28,7 +28,7 @@ class StoreCustomerEvent extends CustomersEvent {
     required this.balance,
     required this.status,
     required this.note,
-     this.profilePic
+    this.profilePic
   });
 }
 
@@ -44,7 +44,6 @@ class UpdateCustomerEvent extends CustomersEvent {
   final String note;
   final File? profilePic;
 
-
   UpdateCustomerEvent({
     required this.id,
     required this.name,
@@ -55,7 +54,7 @@ class UpdateCustomerEvent extends CustomersEvent {
     required this.balance,
     required this.status,
     required this.note,
-     this.profilePic
+    this.profilePic
   });
 }
 
@@ -63,4 +62,18 @@ class DeleteCustomerEvent extends CustomersEvent {
   final int id;
 
   DeleteCustomerEvent({required this.id});
+}
+
+class GetCustomerActivitiesEvent extends CustomersEvent {
+  final int customerId;
+  final int page;
+  
+  GetCustomerActivitiesEvent({required this.customerId, this.page = 1});
+}
+
+class UndoActivityEvent extends CustomersEvent {
+  final int activityId;
+  final int customerId;
+  
+  UndoActivityEvent({required this.activityId, required this.customerId});
 }

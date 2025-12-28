@@ -7,9 +7,9 @@ import '../../../../core/utils/app_colors.dart';
 import '../../../transfers/presentation/controller/transfer_bloc.dart';
 import 'add_widget.dart';
 class CustomMainAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final dynamic? rate;
+  final dynamic rate;
   final bool hasLoadedInitialData;
-  final dynamic? initialRate;
+  final dynamic initialRate;
   final TransferBloc transferBloc;
   final VoidCallback onRefresh;
 
@@ -92,7 +92,7 @@ class CustomMainAppBar extends StatelessWidget implements PreferredSizeWidget {
       ],
     );
   }
-  void showRateEditSheet(BuildContext context, dynamic? currentRate) {
+  void showRateEditSheet(BuildContext context, dynamic currentRate) {
     final controller = TextEditingController(text: currentRate?.toString() ?? '');
 
     showModalBottomSheet(
