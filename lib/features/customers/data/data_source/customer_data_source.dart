@@ -102,18 +102,27 @@ class CustomerDataSourceImpl extends CustomerDataSource {
   }
 
   @override
-  Future<CustomerPartialUpadteModel> getCustomerActivities(
-      {required int customerId, int page = 1}) async {
-    final url = '${ApiConstants.customerActivities}/$customerId?page=$page';
+  Future<CustomerPartialUpadteModel> getCustomerActivities({
+    required int customerId,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    final url =
+        '${ApiConstants.customerActivities}?customer_id=$customerId&page=$page&per_page=$perPage';
+
     final result = await _apiService.get(url);
 
-    return result.fold((l) {
-      log('Error fetching activities: ${l.data}');
-      throw ServerException(errorModel: l);
-    }, (r) {
-      return CustomerPartialUpadteModel.fromJson(r.data);
-    });
+    return result.fold(
+          (l) {
+        log('Error fetching activities: ${l.data}');
+        throw ServerException(errorModel: l);
+      },
+          (r) {
+        return CustomerPartialUpadteModel.fromJson(r.data);
+      },
+    );
   }
+
 
   @override
   Future<String> undoActivity({required int activityId}) async {

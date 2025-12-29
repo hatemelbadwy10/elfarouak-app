@@ -1,3 +1,4 @@
+import 'package:elfarouk_app/core/services/services_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:elfarouk_app/features/customers/data/model/customer_partial_update_model.dart';
@@ -22,130 +23,133 @@ class _CustomerActivitiesViewState extends State<CustomerActivitiesView> {
   @override
   void initState() {
     super.initState();
-    context.read<CustomersBloc>().add(
-          GetCustomerActivitiesEvent(customerId: widget.customerId),
-        );
+
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('أنشطة ${widget.customerName}'),
-        backgroundColor: Theme.of(context).primaryColor,
-      ),
-      body: BlocConsumer<CustomersBloc, CustomersState>(
-        listener: (context, state) {
-          if (state is UndoActivitySuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-          if (state is UndoActivityFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.errMessage),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is CustomerActivitiesLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+    return BlocProvider(
+      create: (BuildContext context){
+        return CustomersBloc(getIt())..add(GetCustomerActivitiesEvent(customerId: widget.customerId));
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('أنشطة ${widget.customerName}'),
+          backgroundColor: Theme.of(context).primaryColor,
+        ),
+        body: BlocConsumer<CustomersBloc, CustomersState>(
+          listener: (context, state) {
+            if (state is UndoActivitySuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+            if (state is UndoActivityFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.errMessage),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is CustomerActivitiesLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
 
-          if (state is CustomerActivitiesFailure) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: Colors.red,
-                    size: 60,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    state.errMessage,
-                    style: const TextStyle(fontSize: 16),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<CustomersBloc>().add(
-                            GetCustomerActivitiesEvent(
-                              customerId: widget.customerId,
-                            ),
-                          );
-                    },
-                    child: const Text('إعادة المحاولة'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (state is CustomerActivitiesSuccess) {
-            final activities = state.activitiesData.data?.activities ?? [];
-
-            if (activities.isEmpty) {
+            if (state is CustomerActivitiesFailure) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.inbox_outlined,
-                      size: 80,
-                      color: Colors.grey[400],
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 60,
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'لا توجد أنشطة',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey[600],
-                      ),
+                      state.errMessage,
+                      style: const TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<CustomersBloc>().add(
+                              GetCustomerActivitiesEvent(
+                                customerId: widget.customerId,
+                              ),
+                            );
+                      },
+                      child: const Text('إعادة المحاولة'),
                     ),
                   ],
                 ),
               );
             }
 
-            return RefreshIndicator(
-              onRefresh: () async {
-                context.read<CustomersBloc>().add(
-                      GetCustomerActivitiesEvent(customerId: widget.customerId),
-                    );
-              },
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: activities.length,
-                itemBuilder: (context, index) {
-                  final activity = activities[index];
-                  return ActivityCard(
-                    activity: activity,
-                    customerId: widget.customerId,
-                  );
+            if (state is CustomerActivitiesSuccess) {
+              final activities = state.activitiesData.data?.activities ?? [];
+
+              if (activities.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inbox_outlined,
+                        size: 80,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'لا توجد أنشطة',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return RefreshIndicator(
+                onRefresh: () async {
+                  context.read<CustomersBloc>().add(
+                        GetCustomerActivitiesEvent(customerId: widget.customerId),
+                      );
                 },
-              ),
-            );
-          }
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: activities.length,
+                  itemBuilder: (context, index) {
+                    final activity = activities[index];
+                    return ActivityCard(
+                      activity: activity,
+                      customerId: widget.customerId,
+                    );
+                  },
+                ),
+              );
+            }
 
-          if (state is UndoActivityLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+            if (state is UndoActivityLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
 
-          return const SizedBox.shrink();
-        },
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }
