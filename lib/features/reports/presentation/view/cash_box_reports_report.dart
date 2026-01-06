@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:elfarouk_app/features/reports/data/model/cash_box_report_model.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:intl/intl.dart' as intl;
 
 import '../controller/transfer_report_bloc.dart';
 
@@ -50,6 +54,226 @@ class _CashboxReportViewState extends State<CashboxReportView> {
         const SnackBar(content: Text("من فضلك اختر كل البيانات")),
       );
     }
+  }
+
+  Future<void> _exportToPdf(List<Activity> activities) async {
+    final pdf = pw.Document();
+
+    // Load Arabic font
+    final arabicFont = await PdfGoogleFonts.cairoRegular();
+    final arabicFontBold = await PdfGoogleFonts.cairoBold();
+
+    // Get branch name
+    String branchName = selectedCashBoxId == 1 ? "فرع ليبيا" : "فرع مصر";
+
+    // Calculate totals
+    double totalIncome = 0;
+    double totalExpense = 0;
+    for (var activity in activities) {
+      if (activity.operation == "add") {
+        totalIncome += activity.amount ?? 0;
+      } else if (activity.operation == "sub") {
+        totalExpense += activity.amount ?? 0;
+      }
+    }
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        textDirection: pw.TextDirection.rtl,
+        theme: pw.ThemeData.withFont(
+          base: arabicFont,
+          bold: arabicFontBold,
+        ),
+        build: (pw.Context context) {
+          return [
+            // Header
+            pw.Container(
+              alignment: pw.Alignment.center,
+              padding: const pw.EdgeInsets.all(20),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.blue900,
+                borderRadius: pw.BorderRadius.circular(10),
+              ),
+              child: pw.Column(
+                children: [
+                  pw.Text(
+                    'تقرير الفروع',
+                    style: pw.TextStyle(
+                      font: arabicFontBold,
+                      fontSize: 24,
+                      color: PdfColors.white,
+                    ),
+                  ),
+                  pw.SizedBox(height: 8),
+                  pw.Text(
+                    branchName,
+                    style: pw.TextStyle(
+                      font: arabicFont,
+                      fontSize: 18,
+                      color: PdfColors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 20),
+
+            // Date Range
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey400),
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    'من: ${startDate!.toString().split(" ").first}',
+                    style: pw.TextStyle(font: arabicFont, fontSize: 14),
+                  ),
+                  pw.Text(
+                    'إلى: ${endDate!.toString().split(" ").first}',
+                    style: pw.TextStyle(font: arabicFont, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 20),
+
+            // Summary
+            pw.Container(
+              padding: const pw.EdgeInsets.all(16),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.grey200,
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Column(
+                children: [
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Text(
+                        'إجمالي الإيرادات:',
+                        style: pw.TextStyle(font: arabicFontBold, fontSize: 14),
+                      ),
+                      pw.Text(
+                        '$totalIncome',
+                        style: pw.TextStyle(
+                          font: arabicFontBold,
+                          fontSize: 14,
+                          color: PdfColors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                  pw.SizedBox(height: 8),
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Text(
+                        'إجمالي المصروفات:',
+                        style: pw.TextStyle(font: arabicFontBold, fontSize: 14),
+                      ),
+                      pw.Text(
+                        '$totalExpense',
+                        style: pw.TextStyle(
+                          font: arabicFontBold,
+                          fontSize: 14,
+                          color: PdfColors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  pw.Divider(),
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Text(
+                        'الصافي:',
+                        style: pw.TextStyle(font: arabicFontBold, fontSize: 16),
+                      ),
+                      pw.Text(
+                        '${totalIncome - totalExpense}',
+                        style: pw.TextStyle(
+                          font: arabicFontBold,
+                          fontSize: 16,
+                          color: (totalIncome - totalExpense) >= 0
+                              ? PdfColors.green
+                              : PdfColors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 20),
+
+            // Activities Table
+            pw.Text(
+              'تفاصيل العمليات',
+              style: pw.TextStyle(font: arabicFontBold, fontSize: 18),
+            ),
+            pw.SizedBox(height: 10),
+
+            pw.Table.fromTextArray(
+              context: context,
+              headerStyle: pw.TextStyle(
+                font: arabicFontBold,
+                fontSize: 12,
+                color: PdfColors.white,
+              ),
+              headerDecoration: const pw.BoxDecoration(
+                color: PdfColors.blue900,
+              ),
+              cellStyle: pw.TextStyle(font: arabicFont, fontSize: 10),
+              cellAlignment: pw.Alignment.center,
+              headerAlignment: pw.Alignment.center,
+              cellHeight: 35,
+              headers: ['التاريخ', 'المستخدم', 'الوصف', 'المبلغ', 'النوع', 'السابق', 'الحالي'],
+              data: activities.map((activity) {
+                return [
+                  activity.createdAt != null
+                      ? activity.createdAt!.toLocal().toString().split(" ").first
+                      : 'N/A',
+                  activity.causerName ?? 'Unknown',
+                  activity.description ?? 'No description',
+                  '${activity.amount ?? 0} ${activity.currency ?? ''}',
+                  activity.operation == "add" ? 'إضافة' : 'خصم',
+                  '${activity.old ?? 'N/A'}',
+                  '${activity.activityNew ?? 'N/A'}',
+                ];
+              }).toList(),
+            ),
+
+            pw.SizedBox(height: 30),
+
+            // Footer
+            pw.Container(
+              alignment: pw.Alignment.center,
+              child: pw.Text(
+                'تم إنشاء التقرير في: ${DateTime.now().toString().split(".").first}',
+                style: pw.TextStyle(
+                  font: arabicFont,
+                  fontSize: 10,
+                  color: PdfColors.grey600,
+                ),
+              ),
+            ),
+          ];
+        },
+      ),
+    );
+
+    // Show PDF preview and print dialog
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
   }
 
   @override
@@ -119,157 +343,175 @@ class _CashboxReportViewState extends State<CashboxReportView> {
                     if (state.activities.isEmpty) {
                       return const Center(child: Text("لا توجد بيانات"));
                     }
-                    return ListView.builder(
-                      itemCount: state.activities.length,
-                      itemBuilder: (context, index) {
-                        final Activity activity = state.activities[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          elevation: 2,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Header with ID and Event
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      "ID: ${activity.id ?? 'N/A'}",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                        fontWeight: FontWeight.w500,
+                    return Column(
+                      children: [
+                        // Export Button
+                        ElevatedButton.icon(
+                          onPressed: () => _exportToPdf(state.activities),
+                          icon: const Icon(Icons.picture_as_pdf),
+                          label: const Text("تصدير كـ PDF"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // List View
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: state.activities.length,
+                            itemBuilder: (context, index) {
+                              final Activity activity = state.activities[index];
+                              return Card(
+                                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                elevation: 2,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Header with ID and Event
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "ID: ${activity.id ?? 'N/A'}",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: activity.event == "updated" ? Colors.blue : Colors.green,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              activity.event ?? "unknown",
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: activity.event == "updated" ? Colors.blue : Colors.green,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        activity.event ?? "unknown",
+
+                                      const SizedBox(height: 12),
+
+                                      // Description
+                                      Text(
+                                        activity.description ?? "No description",
                                         style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
 
-                                const SizedBox(height: 12),
+                                      const SizedBox(height: 12),
 
-                                // Description
-                                Text(
-                                  activity.description ?? "No description",
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 12),
-
-                                // Amount and Operation
-                                Row(
-                                  children: [
-                                    Icon(
-                                      activity.operation == "sub" ? Icons.remove_circle : Icons.add_circle,
-                                      color: activity.operation == "sub" ? Colors.red : Colors.green,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      "${activity.amount ?? 0} ${activity.currency ?? ""}",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: activity.operation == "sub" ? Colors.red : Colors.green,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 12),
-
-                                // Old and New Values
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Column(
-                                    children: [
+                                      // Amount and Operation
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text("السابق:", style: TextStyle(color: Colors.grey[600])),
-                                          Text(
-                                            "${activity.old ?? 'N/A'} ${activity.currency ?? ''}",
-                                            style: const TextStyle(fontWeight: FontWeight.w500),
+                                          Icon(
+                                            activity.operation == "sub" ? Icons.remove_circle : Icons.add_circle,
+                                            color: activity.operation == "sub" ? Colors.red : Colors.green,
+                                            size: 20,
                                           ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text("الحالي:", style: TextStyle(color: Colors.grey[600])),
+                                          const SizedBox(width: 8),
                                           Text(
-                                            "${activity.activityNew ?? 'N/A'} ${activity.currency ?? ''}",
-                                            style: const TextStyle(fontWeight: FontWeight.w500),
+                                            "${activity.amount ?? 0} ${activity.currency ?? ""}",
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: activity.operation == "sub" ? Colors.red : Colors.green,
+                                            ),
                                           ),
                                         ],
                                       ),
 
+                                      const SizedBox(height: 12),
+
+                                      // Old and New Values
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[100],
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text("السابق:", style: TextStyle(color: Colors.grey[600])),
+                                                Text(
+                                                  "${activity.old ?? 'N/A'} ${activity.currency ?? ''}",
+                                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text("الحالي:", style: TextStyle(color: Colors.grey[600])),
+                                                Text(
+                                                  "${activity.activityNew ?? 'N/A'} ${activity.currency ?? ''}",
+                                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 12),
+
+                                      // Footer with Causer and Date
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.person, size: 16, color: Colors.grey[600]),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                activity.causerName ?? "Unknown",
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Text(
+                                            activity.createdAt != null
+                                                ? activity.createdAt!
+                                                .toLocal()
+                                                .toString()
+                                                .split(" ")
+                                                .first
+                                                : "No date",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ],
                                   ),
                                 ),
-
-                                const SizedBox(height: 12),
-
-                                // Footer with Causer and Date
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.person, size: 16, color: Colors.grey[600]),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          activity.causerName ?? "Unknown",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Text(
-                                      activity.createdAt != null
-                                          ? activity.createdAt!
-                                          .toLocal()
-                                          .toString()
-                                          .split(" ")
-                                          .first
-                                          : "No date",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     );
                   } else if (state is TransferReportError) {
                     return Center(child: Text("خطأ: ${state.message}"));
